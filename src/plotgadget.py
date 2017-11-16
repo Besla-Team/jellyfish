@@ -144,9 +144,9 @@ class PlotGadget:
         return
             
 if __name__ == "__main__":
-    path = './m31a_25oct_gadget3_m31a_25oct_000'
-    this = PlotGadget(path, 350)
-    print this.plot_enclosed_mass('test3b_m31_enclosed_mass.pdf')
+#    path = './m31a_25oct_gadget3_m31a_25oct_000'
+#    this = PlotGadget(path, 350)
+#    print this.plot_enclosed_mass('test3b_m31_enclosed_mass.pdf')
 
 #     print this.header_time()
 #     print this.totalmass()

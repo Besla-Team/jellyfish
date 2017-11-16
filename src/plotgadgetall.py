@@ -112,9 +112,9 @@ class PlotGadgetAll:
         return
 
 if __name__ == "__main__":
-    path = './m31a_25oct/gadget3_m31a_25oct_000'
-    this = PlotGadgetAll(path, 350)
+#     path = './m31a_25oct/gadget3_m31a_25oct_000'
+#     this = PlotGadgetAll(path, 350)
     
-    this.plot_total_rot_curve(savename='test_PlotGadgetAll_rotcurve.pdf', newfig=True)
-    this.plot_enclosed_mass(savename='test_PlotGadgetAll.pdf', newfig=True)
+#     this.plot_total_rot_curve(savename='test_PlotGadgetAll_rotcurve.pdf', newfig=True)
+#     this.plot_enclosed_mass(savename='test_PlotGadgetAll.pdf', newfig=True)
     
