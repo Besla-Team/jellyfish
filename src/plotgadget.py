@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function, absolute_import
+
 from pygadgetreader import *
 import numpy as np
 import yt
