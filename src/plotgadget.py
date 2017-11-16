@@ -142,7 +142,102 @@ class PlotGadget:
         if savename:
             plt.savefig('%s'%savename)
         return
-            
+
+
+
+    def pot_enclosed(self, path, type, rmin, rmax, nbins):
+        """
+        Compute the potential profile of a given galaxy component
+
+        Input:
+        ------
+        type : str
+            Particle type to use. ('dm', 'disk', 'bulge')
+        path : str
+            Path to N-body simulation
+        rmin : float
+            Minimum radius to compute the density profile (default=0).
+
+        rmax : float
+            Maximum radius to compute the density profile (default=300)
+
+        nbins : int
+            Number of radial bins to compute the density profile.
+
+        Output:
+        ------
+        r : numpy 1D array.
+            Array with the radial bins.
+        rho : numpy array.
+            Array with the density in each radial bin.
+
+        """
+
+        self.path = path
+        pos = readsnap(self.path, 'pos', type)
+        pot = readsnap(self.path, 'pot', type)
+
+        r_pos = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2) 
+        r = np.linspace(rmin, rmax, nbins-1)
+        pot_bin = np.zeros(nbins-1)
+
+        for i in range(1, len(r)):
+            indexh = np.where((r_pos<r[i]) & (r_pos>r[i-1]))[0]
+            if len(indexh)==0:
+                pot_bin[i-1] = 0
+            else:
+                pot_bin[i-1] = np.mean(pot[indexh]) 
+
+        return r, pot_bin
+
+
+    def rho_enclosed(self, path, type, rmin=0, rmax=300, nbins=30):
+        """
+        Compute the density profile of a given galaxy component
+
+        Input:
+        ------
+        type : str
+            Particle type to use. ('dm', 'disk', 'bulge')
+        path : str
+            Path to N-body simulation
+        rmin : float
+            Minimum radius to compute the density profile (default=0).
+
+        rmax : float
+            Maximum radius to compute the density profile (default=300)
+
+        nbins : int
+            Number of radial bins to compute the density profile.
+
+        Output:
+        ------
+        r : numpy 1D array.
+            Array with the radial bins.
+        rho : numpy array.
+            Array with the density in each radial bin.
+
+        """
+
+        assert type(nbins) == int, "nbins should be an int variable."
+        self.path = path
+        pos = readsnap(self.path, 'pos', type)
+        mass = readsnap(self.path, 'mass', type)
+
+        r_pos = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2)
+
+        r = np.linspace(rmin, rmax, nbins-1)
+
+        rho = np.zeros(nbins-1)
+
+        # Loop over the radial bins.
+        for i in range(1, len(r)):
+            indexh = np.where((r_pos<r[i]) & (r_pos>r[i-1]))[0]
+
+            rho[i-1] = (3*(len(indexh)*mass[0])) / (4*np.pi*r[i]**3)
+
+        return r, rho
+
 if __name__ == "__main__":
 #    path = './m31a_25oct_gadget3_m31a_25oct_000'
 #    this = PlotGadget(path, 350)
