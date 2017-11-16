@@ -79,7 +79,7 @@ class PlotGadget:
         coordinates = ad[("all","Coordinates")]
         center = coordinates[wdens][0]
         return center 
-        
+
     def plot_fullbox_projected_density(self, projection_plane, savename):
         ds = yt.load(self.path,bounding_box=self.bbox)
         ad= ds.all_data()
@@ -87,7 +87,7 @@ class PlotGadget:
         px.annotate_text((0.7, 0.85), '%s Gyr'%round(self.header_time(),2), coord_system='figure', text_args={'color':'white'})
         px.save('%s'%savename)
         return
-        
+
     def plot_projected_density(self, projection_plane, savename, zoom=False):
         center = self.com
         ds = yt.load(self.path,bounding_box=self.bbox)
@@ -95,10 +95,10 @@ class PlotGadget:
         px = yt.ProjectionPlot(ds, projection_plane, ('deposit', 'all_density'), center=center, width=self.box_size)
         if zoom:
             px.zoom(zoom)
-        
+
         px.annotate_text((0.7, 0.85), '%s Gyr'%round(self.header_time(),2), coord_system='figure', text_args={'color':'white'})
         px.save('%s'%savename)
-        
+
         return
 
     def plot_all_density(self, projection_plane, savename):
