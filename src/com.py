@@ -9,7 +9,17 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 #Function that computes the center of mass for the halo and disk and
- the corresponsing orbits for the host and satellite simultaneously
+# the corresponsing orbits for the host and satellite simultaneously
+
+def re_center(vec, cm):
+    """
+    Re center a halo to its center of mass.
+    """
+    pos[:,0] -= cm[0]
+    pos[:,1] -= cm[1]
+    pos[:,2] -= cm[2]
+    return pos
+
 
 def host_sat_particles(xyz, vxyz, pids, Nhost_particles):
     """
@@ -35,7 +45,7 @@ def host_sat_particles(xyz, vxyz, pids, Nhost_particles):
     return xyz[host_ids], vxyz[host_ids], xyz[sat_ids], vxyz[sat_ids]
 
 
-def CM_disk_potential(xyz, vxyz, Pdisk): 
+def com_disk_potential(xyz, vxyz, Pdisk): 
     V_radius = 2
     vx = vxyz[:,0]
     vy = vxyz[:,1]
@@ -59,7 +69,7 @@ def CM_disk_potential(xyz, vxyz, Pdisk):
     vz_cm = sum(vz[avg_particles])/len(avg_particles)
     return np.array([x_cm, y_cm, z_cm]), np.array([vx_cm, vy_cm, vz_cm])
 
-def velocities_r15(cm_pos, pos, vel, rvir):
+def velocities_com(cm_pos, pos, vel, rvir):
     """
     Function to compute the COM velocity in a sphere of 10% of Rvir (kpc)
     """
@@ -125,6 +135,6 @@ def CM(xyz, vxyz, delta=0.025):
         yCM_new = np.sum(xyz[:,1])/N
         zCM_new = np.sum(xyz[:,2])/N
 
-    vxCM_new, vyCM_new, vzCM_new = velocities_r15([xCM_new, yCM_new, zCM_new], xyz, vxyz)
+    vxCM_new, vyCM_new, vzCM_new = velocities_com([xCM_new, yCM_new, zCM_new], xyz, vxyz)
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 

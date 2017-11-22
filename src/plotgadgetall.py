@@ -52,8 +52,8 @@ class PlotGadgetAll:
         masses = []
         for rmin in rs:
             thismass = 0.
-            for pos,mass in zip([self.dmpos, self.diskpos, self.bulgepos], [self.dm, self.disk, self.bulge]):
-                x,y,z = pos[:,0], pos[:,1], pos[:,2]  
+            for pos,mass in zip([self.dmpos, self.diskpos, self.bulgepos], [self.dmmass, self.diskmass, self.bulgemass]):
+                x,y,z = pos[:,0], pos[:,1], pos[:,2]
                 x = x - self.halo_com[0]
                 y = y - self.halo_com[1]
                 z = z - self.halo_com[2]
@@ -98,7 +98,7 @@ class PlotGadgetAll:
                 cut = np.where(r < rmin)[0]
                 thismass += np.sum(mass[cut])
             vc = np.sqrt(G*thismass*1e10/rmin)
-            vcs.append(vc)                
+            vcs.append(vc)
 
         if newfig:
             plt.figure()
@@ -116,48 +116,50 @@ class PlotGadgetAll:
         return
 
     def rho_enclosed(self, rmin=0, rmax=300, nbins=30):
-    """
-    Compute the density profile of a halo with its componenets.
+        """
+        Compute the density profile of a halo with its componenets.
 
-    Input:
-    ------
-    rmin : float
-        Minimum radius to compute the density profile (default=0).
+        Input:
+        ------
+        rmin : float
+            Minimum radius to compute the density profile (default=0).
 
-    rmax : float
-        Maximum radius to compute the density profile (default=300)
+        rmax : float
+            Maximum radius to compute the density profile (default=300)
 
-    nbins : int
-        Number of radial bins to compute the density profile.
+        nbins : int
+            Number of radial bins to compute the density profile.
 
-    Output:
-    ------
-    r : numpy 1D array.
-        Array with the radial bins.
-    rho : numpy array.
-        Array with the density in each radial bin.
+        Output:
+        ------
+        r : numpy 1D array.
+            Array with the radial bins.
+        rho : numpy array.
+            Array with the density in each radial bin.
 
-    """
+        """
 
-    r_posh = np.sqrt(self.dmpos[:,0]**2 + self.dmpos[:,1]**2 + self.dmpos[:,2]**2)
-    r_posd = np.sqrt(self.diskpos[:,0]**2 + self.diskpos[:,1]**2 + self.diskpos[:,2]**2)
-    r_posb = np.sqrt(self.bulgepos[:,0]**2 + self.bulgepos[:,1]**2 + self.diskpos[:,2]**2)
+        assert type(nbins) == int, "nbins should be an int variable."
 
-    r = np.linspace(rmin, rmax, nbins-1)
+        r_posh = np.sqrt(self.dmpos[:,0]**2 + self.dmpos[:,1]**2 + self.dmpos[:,2]**2)
+        r_posd = np.sqrt(self.diskpos[:,0]**2 + self.diskpos[:,1]**2 + self.diskpos[:,2]**2)
+        r_posb = np.sqrt(self.bulgepos[:,0]**2 + self.bulgepos[:,1]**2 + self.diskpos[:,2]**2)
 
-    rho = np.zeros(nbins-1)
+        r = np.linspace(rmin, rmax, nbins-1)
 
-    # Loop over the radial bins.
-    for i in range(1, len(r)):
-        indexh = np.where((r_posh<r[i]) & (r_posh>r[i-1]))[0]
-        indexd = np.where((r_posd<r[i]) & (r_posd>r[i-1]))[0]
-        indexb = np.where((r_posb<r[i]) & (r_posb>r[i-1]))[0]
+        rho = np.zeros(nbins-1)
 
-        rho[i-1] = (3*(len(indexh)*self.dmmass[0]\
-                       + len(indexd)*self.diskmass[0]\
-                       + len(indexb)*self.bulgemass[0])) / (4*np.pi*r[i]**3)
+        # Loop over the radial bins.
+        for i in range(1, len(r)):
+            indexh = np.where((r_posh<r[i]) & (r_posh>r[i-1]))[0]
+            indexd = np.where((r_posd<r[i]) & (r_posd>r[i-1]))[0]
+            indexb = np.where((r_posb<r[i]) & (r_posb>r[i-1]))[0]
 
-    return r, rho
+            rho[i-1] = (3*(len(indexh)*self.dmmass[0]\
+                           + len(indexd)*self.diskmass[0]\
+                           + len(indexb)*self.bulgemass[0])) / (4*np.pi*r[i]**3)
+
+        return r, rho
 
 if __name__ == "__main__":
 #     path = './m31a_25oct/gadget3_m31a_25oct_000'
