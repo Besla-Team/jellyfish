@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from pygadgetreader import *
 import numpy as np
@@ -14,8 +16,10 @@ class PlotGadget:
     def __init__(self, path, type, box_size=1000):
         """ Inputs: path to Gadget3 snapshot, particle type, box_size (kpc)
         """
+
         print path
         self.path = path
+        self.type = type
         self.box_size = box_size
         pos = readsnap(self.path, 'pos',type)
         vel = readsnap(self.path, 'vel', type)
@@ -178,8 +182,8 @@ class PlotGadget:
         """
 
         self.path = path
-        pos = readsnap(self.path, 'pos', type)
-        pot = readsnap(self.path, 'pot', type)
+        pos = readsnap(self.path, 'pos', self.type)
+        pot = readsnap(self.path, 'pot', self.type)
 
         r_pos = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2) 
         r = np.linspace(rmin, rmax, nbins-1)
@@ -195,16 +199,12 @@ class PlotGadget:
         return r, pot_bin
 
 
-    def rho_enclosed(self, path, type, rmin=0, rmax=300, nbins=30):
+    def rho_enclosed(self, rmin=0, rmax=300, nbins=30):
         """
         Compute the density profile of a given galaxy component
 
         Input:
         ------
-        type : str
-            Particle type to use. ('dm', 'disk', 'bulge')
-        path : str
-            Path to N-body simulation
         rmin : float
             Minimum radius to compute the density profile (default=0).
 
@@ -223,10 +223,10 @@ class PlotGadget:
 
         """
 
-        assert type(nbins) == int, "nbins should be an int variable."
-        self.path = path
-        pos = readsnap(self.path, 'pos', type)
-        mass = readsnap(self.path, 'mass', type)
+        #assert type(nbins) == int, "nbins should be an int variable."
+
+        pos = readsnap(self.path, 'pos', self.type)
+        mass = readsnap(self.path, 'mass', self.type)
 
         r_pos = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2)
 
@@ -242,7 +242,7 @@ class PlotGadget:
 
         return r, rho
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
 #    path = './m31a_25oct_gadget3_m31a_25oct_000'
 #    this = PlotGadget(path, 350)
 #    print this.plot_enclosed_mass('test3b_m31_enclosed_mass.pdf')
