@@ -13,42 +13,76 @@ import matplotlib.pyplot as plt
 
 def re_center(vec, cm):
     """
-    Re center a halo to its center of mass.
+    Subtract a vector from a each dimension of another vector, this is done to recenter a halo
+    positions and velocities to its center of mass.
+
+    Input:
+    ------
+    vec : numpy.array
+        A numpy array to which
+    cm : numpy array
+        A numpy 1d array with
+
+    Output:
+    -------
+
+    vec : numpy.array
+        A new vector with a subtracted vector in each dimension.
     """
+    assert np.len(vec)==len(cm), "Make sure the len of your N-vector is the same as your 1d vector"
 
-    pos[:,0] -= cm[0]
-    pos[:,1] -= cm[1]
-    pos[:,2] -= cm[2]
+    for i in range(len(cm)):
+        vec[:,i] -= cm[i]
 
-    return pos
+    return vec
 
 
-def host_sat_particles(xyz, vxyz, pids, Nhost_particles):
+def host_sat_particles(xyz, vxyz, pids, list_num_particles):
     """
     Return the host and the sat particles
     positions and velocities.
 
-    Parameters:
-    -----------
+    Input:
+    ------
     xyz: snapshot coordinates with shape (n,3)
     vxys: snapshot velocities with shape (n,3)
     pids: particles ids
     Nhost_particles: Number of host particles in the snapshot
-    Returns:
+
+    Output:
     --------
     xyz_mw, vxyz_mw, xyzlmc, vxyz_lmc: coordinates and velocities of
     the host and the sat.
 
+
+    TODO:
+    1. Split this in two functions one that return the ids of a given
+    galaxy and another one that returns a given quantity for the satellite ids.
     """
+
+    assert len(xyx)==len(vxyz)==len(pids), "your input parameters have different length"
+
+
     sort_indexes = np.sort(pids)
-    N_cut = sort_indexes[Nhost_particles]
+    N_cut = sort_indexes[Nhost_particles[0]]
     host_ids = np.where(pids<N_cut)[0]
-    sat_ids = np.where(pids>=N_cut)[0]
 
-    return xyz[host_ids], vxyz[host_ids], xyz[sat_ids], vxyz[sat_ids]
+    N_satellites = len(list_num_particles)-1
+    print('Number of satellites : ', N_satellites)
+    max_num_particles = max(list_num_particles)
+
+    all_particles_pos = np.zeros((max_num_particles, N_satellites))
+    all_particles_vel = np.zeros((max_num_particles, N_satellites))
+
+    for i in range(1, N_satellites+1):
+        sat_ids = np.where(pids>=N_cut+list_num_particles[i])[0]
+        all_particles_pos[:list_num_particles[i],i] = xyz[sat_ids]
+        all_particles_vel[:list_num_particles[i],i] = vxyz[sat_ids]
+
+    return all_particles_pos, all_particles_vel
 
 
-def com_disk_potential(xyz, vxyz, Pdisk): 
+def com_disk_potential(xyz, vxyz, Pdisk):
     V_radius = 2
     vx = vxyz[:,0]
     vy = vxyz[:,1]
