@@ -17,7 +17,7 @@ class PlotGadget:
         """ Inputs: path to Gadget3 snapshot, particle type, box_size (kpc)
         """
 
-        print path
+        print(path)
         self.path = path
         self.type = type
         self.box_size = box_size
@@ -25,7 +25,7 @@ class PlotGadget:
         vel = readsnap(self.path, 'vel', type)
         mass = readsnap(self.path, 'mass', type)
         pot = readsnap(self.path, 'pot', type)
-        print len(pos), len(vel), len(mass), len(pot)
+        print(len(pos), len(vel), len(mass), len(pot))
 
         if type == 'dm' or 'bulge':
             self.com, self.vcom = CM(pos, vel)
@@ -125,7 +125,7 @@ class PlotGadget:
         p = yt.ParticleProjectionPlot(ds, projection_plane, ['particle_mass'])#, center=center)#, width=self.box_size, depth=self.box_size)
         p.set_colorbar_label('particle_mass', 'Msun')
         #p.zoom(2)
-        p.annotate_text((0.7, 0.85), '%s Gyr'%round(self.header_time(),2), coord_system='figure', text_args={'color':'white'})
+        p.annotate_text((0.7, 0.85), '%s Gyr'%round(self.header_time(),2), coord_system='figure', text_args={'color':'black'})
         p.save('%s'%savename)
         return
 

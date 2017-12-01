@@ -14,7 +14,7 @@ class PlotGadgetAll:
     def __init__(self, path, box_size=1000):
         """ Inputs: path to Gadget3 snapshot, box_size (kpc)
         """
-        print path
+        print(path)
         self.path = path
         self.box_size = box_size
 
@@ -35,9 +35,9 @@ class PlotGadgetAll:
         self.bulgepos = readsnap(self.path, 'pos','bulge')
 
         self.halo_com, self.halo_vcom = CM(self.dmpos, self.dmvel)
-        print self.halo_com
+        print(self.halo_com)
         self.disk_com, self.disk_vcom = CM_disk_potential(self.diskpos, self.diskvel, self.diskpot)
-        print self.disk_com
+        print(self.disk_com)
 
 
     def header_time(self):
@@ -62,7 +62,7 @@ class PlotGadgetAll:
                 cut = np.where(r < rmin)[0]
                 thismass += np.sum(mass[cut])
             if rmin ==5:
-                print thismass
+                print(thismass)
             masses.append(thismass*1e10)
 
         if newfig:
@@ -87,7 +87,6 @@ class PlotGadgetAll:
         G = 4.498768e-6
 
         for rmin in rs:
-            print rmin
             thismass = 0.
             for pos,mass in zip([self.dmpos, self.diskpos, self.bulgepos], [self.dmmass, self.diskmass, self.bulgemass]):
                 x,y,z = pos[:,0], pos[:,1], pos[:,2]
@@ -110,7 +109,7 @@ class PlotGadgetAll:
         plt.legend(loc='best', ncol=2, fontsize=12)
 
         if savename:
-            print 'saving figure'
+            print('saving figure')
             plt.savefig('%s'%savename)
 
         return
