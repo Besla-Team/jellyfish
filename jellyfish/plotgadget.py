@@ -14,19 +14,34 @@ import matplotlib.pyplot as plt
 class PlotGadget:
 
     def __init__(self, path, type, box_size=1000):
-        """ Inputs: path to Gadget3 snapshot, particle type, box_size (kpc)
+        """ 
+
+        Plot various density plots, particle plots, and profiles for Gadget output
+        
+        Input:
+        ------
+        path : str
+            path to Gadget3 snapshot
+
+        type : str
+            'disk', 'dm', or 'bulge' component
+
+        box_size : float
+            size of the box in which all particles will be included (kpc)
+
         """
 
         print(path)
         self.path = path
         self.type = type
         self.box_size = box_size
+
         pos = readsnap(self.path, 'pos',type)
         vel = readsnap(self.path, 'vel', type)
         mass = readsnap(self.path, 'mass', type)
         pot = readsnap(self.path, 'pot', type)
-        print(len(pos), len(vel), len(mass), len(pot))
 
+        # choose COM function based on component 
         if type == 'dm' or 'bulge':
             self.com, self.vcom = CM(pos, vel)
 
@@ -40,6 +55,7 @@ class PlotGadget:
 
         r = (x**2 + y**2 + z**2)**0.5
 
+        # cut the particles based on given box size
         cut = np.where(r < box_size)[0]
 
         self.pos  = pos[cut]
@@ -47,11 +63,11 @@ class PlotGadget:
         self.r = (self.x**2 + self.y**2 + self.z**2)**0.5
         self.vel = vel[cut]
         self.vx, self.vy, self.vz = self.vel[:,0], self.vel[:,1], self.vel[:,2]
-        
-    
+
         self.mass = mass[cut]
         self.pot = pot[cut]
 
+        # create data structure for particle plots
         self.data = {'particle_position_x': self.x,\
                 'particle_position_y': self.y,\
                 'particle_position_z': self.z,\
@@ -62,20 +78,44 @@ class PlotGadget:
                 'particle_pot' : self.pot}
 
 
+        # establish bounding box
         bbox_lim = 2e5 #kpc
-
         self.bbox = [[-bbox_lim,bbox_lim],[-bbox_lim,bbox_lim],[-bbox_lim,bbox_lim]]
 
     def totalmass_bytype(self):
+        """
+        Output:
+        ------
+        Sum of all particles of this type in units of Msun
+        """
+
         return np.sum(self.data['particle_mass'])*1e10
 
     def header(self):
+        """
+        Output:
+        ------
+        Print all header information
+        """
+
         return readheader(self.path, 'header')
 
     def header_time(self):
+        """
+        Output:
+        ------
+        Print the time in Gyr from the header
+        """
+
         return readheader(self.path, 'time')
 
     def peak_density_loc(self):
+        """
+        Output:
+        ------
+        Returns the x,y,z position for the peak density location.
+        """
+
         ds = yt.load(self.path,bounding_box=self.bbox)
         ad= ds.all_data()
         density = ad[("deposit","all_density")]
@@ -85,6 +125,20 @@ class PlotGadget:
         return center 
 
     def plot_fullbox_projected_density(self, projection_plane, savename):
+        """
+        Inputs:
+        ------
+        projection_plane: int or str
+            0,1,2 or 'x', 'y', 'z' to set which cross section of the 3D data is plotts
+            
+        savename: str
+            String to save file name. Leave off the file extension
+
+        Output:
+        ------
+        A 2D plot showing the density projection of the entire box integrated along the line of sight.
+        """
+
         ds = yt.load(self.path,bounding_box=self.bbox)
         ad= ds.all_data()
         px = yt.ProjectionPlot(ds, projection_plane, ('deposit', 'all_density'))
@@ -93,6 +147,23 @@ class PlotGadget:
         return
 
     def plot_projected_density(self, projection_plane, savename, zoom=False):
+        """
+        Inputs:
+        ------
+        projection_plane: int or str
+            0,1,2 or 'x', 'y', 'z' to set which cross section of the 3D data is plotts
+            
+        savename: str
+            String to save file name. Leave off the file extension
+
+        zoom : int
+            The number of times to zoom on the center (i.e. 2x, 4x)
+
+        Output:
+        ------
+        A 2D plot showing the density projection of the cut box integrated along the line of sight.
+        """
+        
         center = self.com
         ds = yt.load(self.path,bounding_box=self.bbox)
         ad = ds.all_data()
@@ -106,8 +177,20 @@ class PlotGadget:
         return
 
     def plot_all_density(self, projection_plane, savename):
-        '''CAUTION: this plots the DISK density
-        '''
+        """
+        Inputs:
+        ------
+        projection_plane: int or str
+            0,1,2 or 'x', 'y', 'z' to set which cross section of the 3D data is plotts
+            
+        savename: str
+            String to save file name. Leave off the file extension
+
+        Output:
+        ------
+        A 2D plot showing the volumetric density of the cut box 
+        """
+
         center = self.com
         ds = yt.load(self.path,bounding_box=self.bbox)
         ad = ds.all_data()
@@ -119,6 +202,20 @@ class PlotGadget:
         return
 
     def plot_particle_density(self, projection_plane, savename):
+        """
+        Inputs:
+        ------
+        projection_plane: int or str
+            0,1,2 or 'x', 'y', 'z' to set which cross section of the 3D data is plotts
+            
+        savename: str
+            String to save file name. Leave off the file extension
+
+        Output:
+        ------
+        A 2D particle plot showing the mass density of the cut box 
+        """
+
         bbox = 1.1*np.array([[np.min(self.x), np.max(self.x)], [np.min(self.y), np.max(self.y)], [np.min(self.z), np.max(self.z)]])
         ds = yt.load_particles(self.data, length_unit=kpc,mass_unit=1e10,  bbox = bbox, n_ref=4)
         center = self.com
@@ -130,6 +227,32 @@ class PlotGadget:
         return
 
     def plot_rot_curve(self, bin_width, savename=False, newfig=False, xlim=20):
+        """
+        Inputs:
+        ------
+        bin_width: float
+            The bin width (in kpc) of how often to sample the rotation curve.
+            
+        savename: str
+            String to save file name. Leave off the file extension
+
+        newfig: bool
+            If True, it will initiate a new figure on which to plot.
+
+        xlim: float
+            The limit in kpc for how far out to plot the rotation curve.
+
+        Output:
+        ------
+        A plot showing r vs. v_circ
+
+        rs : list of floats
+            The range over which the rotation curve is computed. Determined by bin_width and box_size.
+
+        vcs : the circular velocity at a given value of r, computed from a spherical approximation of v_circ = sqrt(G*M(r)/r)
+
+        """
+
         rs = np.arange(1., self.box_size, bin_width)
         vcs = []
         G = 4.498768e-6
@@ -236,16 +359,3 @@ class PlotGadget:
 
         return r, rho
 
-#if __name__ == "__main__":
-#    path = './m31a_25oct_gadget3_m31a_25oct_000'
-#    this = PlotGadget(path, 350)
-#    print this.plot_enclosed_mass('test3b_m31_enclosed_mass.pdf')
-
-#     print this.header_time()
-#     print this.totalmass()
-#     print this.find_bbox_lim()
-#     print this.peak_density_loc()
-#     this.plot_fullbox_projected_density(0,'test3b_m31_fullbox')
-#     this.plot_projected_density(0, 'test3b_m31')
-#     this.plot_all_density(0, 'test3b_m31')
-#     this.plot_particle_density(0, 'test3b_m31')
