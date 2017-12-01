@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+#from __future__ import absolute_import
+#from __future__ import division
+#from __future__ import print_function
 
 from pygadgetreader import *
 import numpy as np
@@ -151,18 +151,12 @@ class PlotGadget:
             plt.savefig('%s'%savename)
         return
 
-
-
-    def pot_enclosed(self, path, type, rmin, rmax, nbins):
+    def pot_enclosed(self, rmin=0, rmax=300, nbins=30):
         """
         Compute the potential profile of a given galaxy component
 
         Input:
         ------
-        type : str
-            Particle type to use. ('dm', 'disk', 'bulge')
-        path : str
-            Path to N-body simulation
         rmin : float
             Minimum radius to compute the density profile (default=0).
 
@@ -181,7 +175,7 @@ class PlotGadget:
 
         """
 
-        self.path = path
+
         pos = readsnap(self.path, 'pos', self.type)
         pot = readsnap(self.path, 'pot', self.type)
 
