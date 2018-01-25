@@ -160,7 +160,7 @@ class PlotGadgetAll:
 
         return r, rho
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
 #     path = './m31a_25oct/gadget3_m31a_25oct_000'
 #     this = PlotGadgetAll(path, 350)
     
