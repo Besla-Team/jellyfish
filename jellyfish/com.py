@@ -60,15 +60,15 @@ def host_sat_particles(xyz, vxyz, pids, list_num_particles):
     galaxy and another one that returns a given quantity for the satellite ids.
     """
 
-    assert len(xyx)==len(vxyz)==len(pids), "your input parameters have different length"
+    assert len(xyz)==len(vxyz)==len(pids), "your input parameters have different length"
 
 
     sort_indexes = np.sort(pids)
-    N_cut = sort_indexes[Nhost_particles[0]]
+    N_cut = sort_indexes[list_num_particles[0]]
     host_ids = np.where(pids<N_cut)[0]
-
+    print('here')
     N_satellites = len(list_num_particles)-1
-    print('Number of satellites : ', N_satellites)
+    print('Number of satellites: ', N_satellites)
     max_num_particles = max(list_num_particles)
 
     all_particles_pos = np.zeros((max_num_particles, N_satellites))
