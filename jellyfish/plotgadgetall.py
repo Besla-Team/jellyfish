@@ -6,7 +6,7 @@ from pygadgetreader import *
 import numpy as np
 import yt
 from yt.units import parsec, Msun, kpc,g
-from octopus import CM, CM_disk_potential
+from .com import CM, com_disk_potential
 import matplotlib.pyplot as plt
 
 class PlotGadgetAll:

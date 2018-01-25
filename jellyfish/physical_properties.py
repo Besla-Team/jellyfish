@@ -5,6 +5,7 @@ energy of the halo.
 """
 
 import numpy as np
+from scipy import linalg
 
 def angular_momentum(xyz, vxyz, M):
 
