@@ -37,17 +37,20 @@ def re_center(vec, cm):
     return vec
 
 
-def host_sat_particles(xyz, vxyz, pids, list_num_particles):
+def host_sat_particles(xyz, vxyz, pids, list_num_particles, gal_ind, **kwargs):
     """
-    Return the host and the sat particles
-    positions and velocities.
+    Return a satellite or the host galaxy properties see **kwargs.
+
 
     Input:
     ------
-    xyz: snapshot coordinates with shape (n,3)
-    vxys: snapshot velocities with shape (n,3)
-    pids: particles ids
-    Nhost_particles: Number of host particles in the snapshot
+    xyz: coordinates with shape (n,3)
+    vxys: velocities with shape (n,3)
+    pids: array with all the DM particles ids
+    list_num_particles: A list with the number of particles of all the galaxies
+                        in the ids.
+    gal_ind : Index of the galaxy that you need.
+
 
     Output:
     --------
@@ -56,30 +59,31 @@ def host_sat_particles(xyz, vxyz, pids, list_num_particles):
 
 
     TODO:
-    1. Split this in two functions one that return the ids of a given
-    galaxy and another one that returns a given quantity for the satellite ids.
+    1. add Kwargs
+
     """
 
     assert len(xyz)==len(vxyz)==len(pids), "your input parameters have different length"
-
+    assert type(galaxy) == int, "your galaxy type should be an integer"
+    assert gal_ind >= 0, "Galaxy type can't be negative"
 
     sort_indexes = np.sort(pids)
-    N_cut = sort_indexes[list_num_particles[0]]
-    host_ids = np.where(pids<N_cut)[0]
-    print('here')
-    N_satellites = len(list_num_particles)-1
-    print('Number of satellites: ', N_satellites)
-    max_num_particles = max(list_num_particles)
 
-    all_particles_pos = np.zeros((max_num_particles, N_satellites))
-    all_particles_vel = np.zeros((max_num_particles, N_satellites))
+    if gal_ind==0:
+        N_cut_min = sort_indexes[0]
+        N_cut_max = sort_indexes[sum(list_num_particles[:gal_ind+1])-1]
 
-    for i in range(1, N_satellites+1):
-        sat_ids = np.where(pids>=N_cut+list_num_particles[i])[0]
-        all_particles_pos[:list_num_particles[i],i] = xyz[sat_ids]
-        all_particles_vel[:list_num_particles[i],i] = vxyz[sat_ids]
+    elif gal_ind == len(list_num_particles)-1:
+        N_cut_min = sort_indexes[sum(list_num_particles[:gal_ind])]
+        N_cut_max = sort_indexes[-1]
 
-    return all_particles_pos, all_particles_vel
+    else:
+        N_cut_min = sort_indexes[sum(list_num_particles[:gal_ind])]
+        N_cut_max = sort_indexes[sum(list_num_particles[:gal_ind+1])]
+
+    sat_ids = np.where((pids>=N_cut_min) & (pids<=N_cut_max))[0] # selecting id
+
+    return xyz[sat_ids], vxyz[sat_ids]
 
 
 def com_disk_potential(xyz, vxyz, Pdisk):
@@ -174,4 +178,3 @@ def CM(xyz, vxyz, delta=0.025):
 
     vxCM_new, vyCM_new, vzCM_new = velocities_com([xCM_new, yCM_new, zCM_new], xyz, vxyz)
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
-
