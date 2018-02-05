@@ -37,7 +37,7 @@ def re_center(vec, cm):
     return vec
 
 
-def host_sat_particles(xyz, vxyz, pids, list_num_particles, gal_ind, **kwargs):
+def host_sat_particles(pids, list_num_particles, gal_ind, *args):
     """
     Return a satellite or the host galaxy properties see **kwargs.
 
@@ -63,8 +63,8 @@ def host_sat_particles(xyz, vxyz, pids, list_num_particles, gal_ind, **kwargs):
 
     """
 
-    assert len(xyz)==len(vxyz)==len(pids), "your input parameters have different length"
-    assert type(galaxy) == int, "your galaxy type should be an integer"
+    #assert len(xyz)==len(vxyz)==len(pids), "your input parameters have different length"
+    assert type(gal_ind) == int, "your galaxy type should be an integer"
     assert gal_ind >= 0, "Galaxy type can't be negative"
 
     sort_indexes = np.sort(pids)
@@ -83,7 +83,10 @@ def host_sat_particles(xyz, vxyz, pids, list_num_particles, gal_ind, **kwargs):
 
     sat_ids = np.where((pids>=N_cut_min) & (pids<=N_cut_max))[0] # selecting id
 
-    return xyz[sat_ids], vxyz[sat_ids]
+    results = []
+    for arg in args:
+        results.append(arg[sat_ids])
+    return results
 
 
 def com_disk_potential(xyz, vxyz, Pdisk):
