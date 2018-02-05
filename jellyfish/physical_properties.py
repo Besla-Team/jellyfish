@@ -6,38 +6,43 @@ energy of the halo.
 
 import numpy as np
 from scipy import linalg
+import astropy.units as u
+from astropy.constants import G
+
+
+G = G.to(u.kpc*u.km**2/u.s**2/u.Msun)
 
 def angular_momentum(xyz, vxyz, M):
 
     """
     Computes the angular momentum of the DM halo.
+    Inputs: position vector, velocity vector, particle masses
+    Output: total orbital angular momentum vector
+
     """
+    
+    r_c_p = np.array([np.cross(xyz[i], vxyz[i]) for i in range(len(xyz))])
+    J_x = np.sum(r_c_p[:,0])*u.kpc*u.km/u.s
+    J_y = np.sum(r_c_p[:,1])*u.kpc*u.km/u.s
+    J_z = np.sum(r_c_p[:,2])*u.kpc*u.km/u.s
+    M_tot = np.sum(M)*1E10*u.Msun
+    return J_x*M_tot, J_y*M_tot, J_z*M_tot
 
-    r_c_p = ([np.cross(xyz[i], vxyz[i]) for i in range(len(xyz))])
-    J_x_i = np.zeros(len(r_c_p))
-    J_y_i = np.zeros(len(r_c_p))
-    J_z_i = np.zeros(len(r_c_p))
-    for i in range(len(r_c_p)):
-        J_x_i[i] = r_c_p[i][0]
-        J_y_i[i] = r_c_p[i][1]
-        J_z_i[i] = r_c_p[i][2]
-    J_x = np.sum(J_x_i)
-    J_y = np.sum(J_y_i)
-    J_z = np.sum(J_z_i)
-    M_tot = np.sum(M)*1E10
-    J = np.array([J_x, J_y, J_z])
-    J_t = np.dot(M_tot, J)
-    return J_t
-
-def spin_param(J, M, xyz):
+def spin_param(J, M, xyz, R):
 
     """
     Spin parameter:
+    Inputs: total angular momentum vector, particle masses, position vector
+    Output: Bullock 2001 halo spin parameter (should be between 0-1)
     """
+
     J_n = linalg.norm(J) # Norm of J
     M_t = np.sum(M)*1E10 # Enclosed mass within Rmax
-    R = np.max(np.sqrt(xyz[:,0]**2 + xyz[:,1]**2 + xyz[:,2]**2)) #Rmax
-    V_c = np.sqrt(G*M_t/R) # V_c at Rmax and M_t
+    if not R:
+        R = np.max(np.sqrt(xyz[:,0]**2 + xyz[:,1]**2 + xyz[:,2]**2)) #Rmax
+    print 'R:', R
+    V_c = np.sqrt(G*M_t/R).to('km/s') # V_c at Rmax and M_t
+    print 'V', V_c
     l = J_n / (np.sqrt(2.0) * M_t * V_c * R)
     return l.value
 
