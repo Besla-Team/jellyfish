@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 #Function that computes the center of mass for the halo and disk and
 # the corresponsing orbits for the host and satellite simultaneously
 
+
+
 def re_center(vec, cm):
     """
     Subtract a vector from a each dimension of another vector, this is done to recenter a halo
@@ -29,9 +31,9 @@ def re_center(vec, cm):
     vec : numpy.array
         A new vector with a subtracted vector in each dimension.
     """
-    assert np.len(vec)==len(cm), "Make sure the len of your N-vector is the same as your 1d vector"
+    assert np.len(vec)==np.len(cm), "Make sure the len of your N-vector is the same as your 1d vector"
 
-    for i in range(len(cm)):
+    for i in range(np.len(cm)):
         vec[:,i] -= cm[i]
 
     return vec
@@ -118,7 +120,7 @@ def velocities_com(cm_pos, pos, vel, rvir):
     Function to compute the COM velocity in a sphere of 10% of Rvir (kpc)
     """
     # Compute the distance with respect to the COM
-    R_cm = ((pos[:,0]-cm_pos[0])**2 + (pos[:,1]-cm_pos[1])**2 + (pos[:,2]-cm_pos[2])**2)**0.5
+20830000    R_cm = ((pos[:,0]-cm_pos[0])**2 + (pos[:,1]-cm_pos[1])**2 + (pos[:,2]-cm_pos[2])**2)**0.5
     # Select the particles inside 15 kpc
     index = np.where(R_cm < 0.1*rvir)[0]
     # Compute the velocities of the COM:
