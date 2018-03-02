@@ -1,25 +1,29 @@
-
-# coding: utf-8
-
-
 from scipy.optimize import bisect
 import numpy as np
 
-
-
-# point mass definition
 def r_t(R, M, m):
-    print R, M, m
+    ''' Tidal radius calculation when both the host and satellite are considered point masses.
+    R (kpc): The distance between the two galaxies (i.e. pericenter).
+    M (Msun): Total mass of the host galaxy.
+    m (Msun): Total mass of the satellite galaxy.
+    '''
     return R*(m/(2*M))**(1/3.)
 
 
-
 def mass_nfw(Mvir, R, cvir, omegam=0.3):
+    ''' NFW halo mass profile
+    Mvir (Msun): virial mass
+    R (kpc): distance from halo COM
+    cvir: virial concentration
+    omegam: cosmological baryon fraction
+    '''
 
     def f(x):
         return np.log(1+x) - (x / (1+x))
 
     def delta_vir(omegam=0.3):
+        ''' Bryan & Norman 1998 definition assuming spherical top-hat perturbation
+        '''
         x = omegam - 1.
         deltac = 18*np.pi**2 + 82*x -39*x**2
         return deltac/omegam
@@ -32,24 +36,27 @@ def mass_nfw(Mvir, R, cvir, omegam=0.3):
     x = R/rs
     return Mvir*f(x)/f(cvir)
 
-
-
 def mass_plummer(M, R, a):
+    '''Plummer sphere mass profile
+    M (Msun): total mass
+    R (kpc): distance from COM
+    a (kpc): Plummer scale length
+    '''
     return M*R**3/ (R**2 + a**2)**(1.5)
 
-
-
-mass_plummer(2.3e11, 15., 20)/1e10
-
-
 def mass_hernquist(M, R, a):
+    ''' Hernquist mass profile
+    M (Msun): total mass
+    R (kpc): distance from COM
+    a (kpc): Hernquist scale length
+    '''
     return M*R**2. / (R+a)**2.
 
 
-
 def r_t0(R, host, M, A, m):
-
-    #make this part better
+    ''' Tidal radius calculation when the host is an extended body and the satellite is a point mass.
+    R (kpc): 
+    '''
     if host == 1:
         MR = mass_nfw(M, R, A)
 
@@ -63,12 +70,9 @@ def r_t0(R, host, M, A, m):
     return R*(m/(2*MR))**(1/3.)
 
 
-
-
 def r_t1(R, host, sat, Mhost, Ahost, msat, asat):
+    ''' Eq. 3 from van den Bosch 2018a: Tidal radius calculation where both host and satellite are extended bodies.
 
-    def r_t1_b(r_t, R, host, sat, Mhost, Ahost, msat, asat):
-        """
         R (kpc): the separation between two galaxies' COMs
         host (int): 1,2,3 which correspond to nfw, plummer, hernquist profiles
         sat (int): 1,2,3 which correspond to nfw, plummer, hernquist profiles
@@ -76,11 +80,15 @@ def r_t1(R, host, sat, Mhost, Ahost, msat, asat):
         Ahost (kpc): the scale radius or concentration for the chosen host mass profile
         msat (Msun): the mass of the satellite
         asat (kpc): the scale radius or concentration for the chosen satellite mass profile
+       
+    '''
 
-        """
+    def r_t1_b(r_t, R, host, sat, Mhost, Ahost, msat, asat):
+        ''' Function to use scipy bisection method to numerically solve for r_t
+        '''
+
         R_R = np.arange(1., R+0.1*2., 0.1)
 
-        #make this part better
         if host == 1:
             MR = mass_nfw(Mhost, R_R, Ahost)
 
@@ -98,11 +106,6 @@ def r_t1(R, host, sat, Mhost, Ahost, msat, asat):
 
         if sat == 3:
             mr = mass_hernquist(msat, r_t, asat)
-
-        #print('host mass enclosed', MR[:-1])
-        #print MR, mr
-        #mr = mass_plummer(msat, r_t, asat)
-        #MR = mass_nfw(Mhost, R_R, Ahost)
 
         dlnM_dlnR = np.gradient(list(np.log(MR)), R_R[1]-R_R[0])
         r_cut = np.argmin(np.abs(R_R-R))
