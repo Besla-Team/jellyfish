@@ -73,15 +73,15 @@ def host_sat_particles(pids, list_num_particles, gal_ind, *args):
 
     if gal_ind==0:
         N_cut_min = sort_indexes[0]
-        N_cut_max = sort_indexes[sum(list_num_particles[:gal_ind+1])-1]
+        N_cut_max = sort_indexes[int(sum(list_num_particles[:gal_ind+1])-1)]
 
     elif gal_ind == len(list_num_particles)-1:
-        N_cut_min = sort_indexes[sum(list_num_particles[:gal_ind])]
+        N_cut_min = sort_indexes[int(sum(list_num_particles[:gal_ind]))]
         N_cut_max = sort_indexes[-1]
 
     else:
-        N_cut_min = sort_indexes[sum(list_num_particles[:gal_ind])]
-        N_cut_max = sort_indexes[sum(list_num_particles[:gal_ind+1])]
+        N_cut_min = sort_indexes[int(sum(list_num_particles[:gal_ind]))]
+        N_cut_max = sort_indexes[int(sum(list_num_particles[:gal_ind+1]))]
 
     sat_ids = np.where((pids>=N_cut_min) & (pids<=N_cut_max))[0] # selecting id
 

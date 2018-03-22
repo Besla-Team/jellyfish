@@ -12,19 +12,21 @@ from astropy.constants import G
 
 
 
-class PhysProps(self, pos, vel, mass, pot):
-    """
-    it uses G from Astropy, note that this onw is different from the Gadget definition
-    see : https://github.com/jngaravitoc/MW_anisotropy/blob/master/code/equilibrium/G_units_gadget.ipynb
-    """
-    self.pos = pos
-    self.vel = vel
-    self.mass = mass
-    self.M = np.sum(mass)
-    self.pot = pot
-    self.R =
-    self.V =
-    self.G = G.to(u.kpc*u.km**2/u.s**2/u.Msun)
+class PhysProps:
+    
+    def __init__(self, pos, vel, mass, pot):
+        """
+        it uses G from Astropy, note that this onw is different from the Gadget definition
+        see : https://github.com/jngaravitoc/MW_anisotropy/blob/master/code/equilibrium/G_units_gadget.ipynb
+        """
+        self.pos = pos
+        self.vel = vel
+        self.mass = mass
+        self.M = np.sum(mass)
+        self.pot = pot
+        #self.R =
+        #self.V =
+        self.G = G.to(u.kpc*u.km**2/u.s**2/u.Msun)
 
 
 
