@@ -38,9 +38,10 @@ class NFW:
         m = self.mass()
         return np.sqrt(G*m/self.r)
 
-    def acc(self):
-        ## check this formula
-        return -G*self.Mvir*f(self.x)/(f(self.cvir)*self.r**2.)
+    def acc(self, position, i):
+        x,y,z = position
+        rr = np.sqrt(x**2. + y**2. + z**2.)
+        return -G*self.Mvir*f(self.x)*i/(f(self.cvir)*self.rr**3.)
         
 
 class Isothermal:
@@ -65,16 +66,12 @@ class Isothermal:
         phi = self.potential()
         return np.sqrt(-2.*phi)
 
-    def acc(self, pos_vec):
-        # check this formula
+    def acc(self, position, i):
         r = self.r
         vc = self.vc
-        x,y,z = pos_vec
+        x,y,z = position
         rr = np.sqrt(x**2 + y**2 + z**2)
-        ax = x * vc**2 /rr**2
-        ay = y * vc**2 /rr**2
-        az = z * vc**2 /rr**2
-        acc = [ax, ay, az]
+        acc = i * vc**2 /rr**2
         return acc
 
 
@@ -150,23 +147,21 @@ class MN:
         phi = self.potential()
         return np.sqrt(-2*phi)
 
-    def acc(self, pos_vec):
-        ## check this formula
+    def acc(self, position, i):
         G = self.G
-        b = self.b
-        a = self.a
-        r = self.r
-        z = self.z
+        bdisk = self.b
+        adisk = self.a
+        rdisk = self.r
+        zdisk = self.z
         Mdisk = self.Mdisk
-        x,y,z = pos_vec
+        x,y,z = position
         rr = np.sqrt(x**2 + y**2 + z**2)
-        c = G * Mdisk
-        K = a + np.sqrt(z**2 + b**2)
 
-        accx = c * x / (rr**2 + K**2)**(1.5)
-        accy = c * y / (rr**2 + K**2)**(1.5)
-        accz = c * z * component**2 / (np.sqrt(z**2 + b**2) * (rr**2 + K**2)**(1.5)) * rr        
-        return [accx, accy, accz]
+        if i == 'x' or 'y':
+            acc = -G*Mdisk*i/( (rdisk**2.) + (adisk + np.sqrt(z**2. + bdisk**2.))**2.)**(1.5) 
+        if i == 'z':
+            acc = -G*Mdisk*i*(adisk+np.sqrt(z**2.+bdisk**2.))/(((adisk+np.sqrt(z**2. + bdisk**2.))**2. + rdisk**2.)**(1.5) * np.sqrt(relz**2. + bdisk**2.)) 
+        return acc
         
 class Hernquist:
     def __init__(self, Mvir, r, a):
@@ -206,18 +201,13 @@ class Hernquist:
         r = self.r
         return np.sqrt(G*M/r)
 
-    def a_grav(self, position):
-        #check this formula
+    def a_grav(self, position, i):
         M = self.Mvir
         a = self.a
         r = self.r
         x,y,z = position
         rr = np.sqrt(x**2 + y**2 + z**2.)
-        ax = G*M* x**2 /(rr**2 * (rr+a)**2)
-        ay = G*M* y**2 /(rr**2 * (rr+a)**2)
-        az = G*M* z**2 /(rr**2 * (rr+a)**2)
-        acc = [ax, ay, az]
-        return acc
+        return -G*M*i/((rr**2. + a**2.) * rr)
 
 class Plummer:
     def __init__(self, Mtot, r, a):
@@ -259,16 +249,12 @@ class Plummer:
         M = self.mass()
         return np.sqrt(G*M/r)
 
-    def a_grav(self, position):
-        ## check this formula
+    def a_grav(self, position, i):
         ''' Output: 3D acceleration at a given 3D position, useful for orbit integrators'''
 
         M = self.Mtot
         a = self.a
         x,y,z = position
         rr = np.sqrt(x**2 + y**2 + z**2)
-        ax = (G * M * x**2)/(rr * (rr**2 + a**2)**(1.5) )
-        ay = (G * M * y**2)/(rr * (rr**2 + a**2)**(1.5) )
-        az = (G * M * z**2)/(rr * (rr**2 + a**2)**(1.5) )
-        acc = [ax, ay, az]
-        return acc
+        return - (G * M * i)/(rr**2 + a**2)**(1.5) 
+
