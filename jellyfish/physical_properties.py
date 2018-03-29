@@ -1,7 +1,26 @@
 """
-Compute the Angular Momentun, spin parameter,
-anisotropy parameter, potential and kinetic
-energy of the halo.
+Class that computes the angular momentun, spin parameter,
+anisotropy parameter, potential and kinetic energies.
+of a halo.
+
+To-Do:
+------
+
+0. Speed up angular momentum computation!
+
+1. Rvir and Mvir are not defined jet to compute the circular velocity.
+   Should we comoute them here or made them as an input parameter.
+
+2. Peebles spin parameter
+
+
+
+
+
+History:
+--------
+
+03/29/18: 
 """
 
 import numpy as np
@@ -24,46 +43,60 @@ class PhysProps:
         self.mass = mass
         self.M = np.sum(mass)
         self.pot = pot
-        #self.R =
-        #self.V =
+        self.R = np.max(np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2))
+        self.V = np.max(np.sqrt(vel[:,0]**2 + vel[:,1]**2 + vel[:,2]**2))
         self.G = G.to(u.kpc*u.km**2/u.s**2/u.Msun)
 
 
 
     def angular_momentum(self):
 
+        r"""
+        Computes the angular momentum of a DM halo.
+        It assumes that all the particles have the same mass.
+        
+        $J_i = M  \sum_i (\vec{r_i} \times \vec{v_i}$)_i
+         
+        
         """
-        Computes the angular momentum of the DM halo.
-        Inputs: position vector, velocity vector, particle masses
-        Output: total orbital angular momentum vector
 
-        """
-
-
+        # this is slow!
         r_c_p = np.array([np.cross(self.pos[i], self.vel[i]) for i in range(len(self.pos))])
-        J_x = np.sum(r_c_p[:,0])*u.kpc*u.km/u.s
-        J_y = np.sum(r_c_p[:,1])*u.kpc*u.km/u.s
-        J_z = np.sum(r_c_p[:,2])*u.kpc*u.km/u.s
-        M_tot = np.sum(self.M)*u.Msun
-        return J_x*M_tot, J_y*M_tot, J_z*M_tot
+        J_x = np.sum(r_c_p[:,0])
+        J_y = np.sum(r_c_p[:,1])
+        J_z = np.sum(r_c_p[:,2])
+        M_tot = np.sum(self.M)
+        return [J_x*M_tot, J_y*M_tot, J_z*M_tot]
 
     def spin_param(self, J):
 
         """
-        Spin parameter:
-        Inputs: total angular momentum vector, particle masses, position vector
-        Output: Bullock 2001 halo spin parameter (should be between 0-1)
+        Bullock Spin parameter:
+        
+        $\lambda = \dfrac{J}{\sqrt{2}MVR}$
+    
+        Reference: Equation 5 in http://adsabs.harvard.edu/abs/2001ApJ...555..240B
+        
+        Output:
+        -------
+        
+        lambda : float
         """
 
 
         J_n = linalg.norm(J) # Norm of J
          # Enclosed mass within Rmax
 
-        #print 'R:', R
-        V_c = np.sqrt(G*self.M/self.R).to('km/s') # V_c at Rmax and M_t
+        print('Assumes that the velocities are in km/s, Masses in Msun and distances in kpc.')
+        
+        V_c = np.sqrt(G.value*self.M/(self.R)) # V_c at Rmax and M_t
         #print 'V', V_c
-        l = J_n / (np.sqrt(2.0) * self.M * V_c * self.R)
-        return l.value
+        Lambda = J_n / (np.sqrt(2.0) * self.M * V_c * self.R)
+        
+        assert Lambda <=1 ,'Error lambda is larger than 1.'
+        assert Lambda >0 ,'Error lambda is negative'
+        
+        return Lambda.value
 
     def kinetic_energy(vxyz, M):
 
