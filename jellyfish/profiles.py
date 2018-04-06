@@ -167,8 +167,8 @@ class Hernquist:
     def __init__(self, Mvir, r, a):
         """
         Inputs: Mvir: total mass (solar mass)
-                a: Hernquist length scale (kpc)
-                r: radius (kpc)
+        a: Hernquist length scale (kpc)
+        r: radius (kpc)
         """
         self.Mvir = Mvir
         self.a = a
@@ -201,7 +201,7 @@ class Hernquist:
         r = self.r
         return np.sqrt(G*M/r)
 
-    def a_grav(self, position, i):
+    def acc(self, position, i):
         M = self.Mvir
         a = self.a
         r = self.r
@@ -213,8 +213,8 @@ class Plummer:
     def __init__(self, Mtot, r, a):
         """
         Inputs: Mtot: total mass (solar mass)
-                a: Plummer length scale (kpc)
-                r: radius (kpc)
+        a: Plummer length scale (kpc)
+        r: radius (kpc)
         """
         self.Mtot = Mtot
         self.a = a
@@ -249,9 +249,7 @@ class Plummer:
         M = self.mass()
         return np.sqrt(G*M/r)
 
-    def a_grav(self, position, i):
-        ''' Output: 3D acceleration at a given 3D position, useful for orbit integrators'''
-
+    def acc(self, position, i):        
         M = self.Mtot
         a = self.a
         x,y,z = position
