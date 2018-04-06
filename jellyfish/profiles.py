@@ -99,22 +99,21 @@ class MN:
         B = self.B
         return -G*Mdisk / np.sqrt(r**2 + (a**2 + B**2)**2)
 
-    def mass(self):
-        b = self.b
-        a = self.a
-        r = self.r
-        z = self.z
-        Mdisk = self.Mdisk
-        K = a + np.sqrt(z**2 + b**2)
-        num = r**2.
-        den = (r**2 + K**2)**(1.5)
-        t1 = num/den
+#     def mass(self):
+#         b = self.b
+#         a = self.a
+#         r = self.r
+#         z = self.z
+#         Mdisk = self.Mdisk
+#         K = a + np.sqrt(z**2 + b**2)
+#         num = r**2.
+#         den = (r**2 + K**2)**(1.5)
+#         t1 = num/den
 
-        num = z * K
-        den = np.sqrt(z**2 + b**2) * (K**2 + r**2)**(1.5)
-        t2 = num/den
-
-        return Mdisk * ((r *t1) + (t2 * z))
+#         num = z * K
+#         den = np.sqrt(z**2 + b**2) * (K**2 + r**2)**(1.5)
+#         t2 = num/den
+#         return Mdisk * ((r *t1) + (t2 * z))
 
     def v_rot(self):
         # taken from Bullock 05 paper

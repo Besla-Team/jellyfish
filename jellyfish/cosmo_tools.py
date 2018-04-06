@@ -20,7 +20,7 @@ from astropy import constants
 
 G = constants.G.to(u.kpc * u.km**2. / u.Msun/ u.s**2.)
 
-def time(z, h. OM,OL):
+def time(z, h, OM,OL):
     '''
     Calculate lookback time for a flat cosmology
     '''
