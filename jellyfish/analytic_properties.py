@@ -66,7 +66,7 @@ def r_t0(R, host, M, A, m):
     if host == 3:
         MR = mass_hernquist(M, R, A)
 
-    print R, M, m
+    print(R, M, m)
     return R*(m/(2*MR))**(1/3.)
 
 
