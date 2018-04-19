@@ -48,6 +48,20 @@ class PhysProps:
         self.G = G.to(u.kpc*u.km**2/u.s**2/u.Msun)
 
 
+    def kinetic_energy(self, R):
+
+        """
+        Kinetic energy:
+        
+        
+        """
+        index = np.where(self.R<R)[0]
+        mass_trunc = np.sum(self.mass[index])
+        K = 0.5*mass_trunc*(self.vel[index,0]**2.0 + self.vel[index,1]**2.0\
+                            + self.vel[index,2]**2.0)
+        
+        return K
+
     def angular_momentum(self, R):
 
         r"""
@@ -65,15 +79,15 @@ class PhysProps:
         pos_c = self.pos[index]
         vel_c = self.vel[index]
         mass_trunc = np.sum(self.mass[index])
-
+        mp = self.mass[index]
         
-        r_c_p = np.array([np.cross(pos_c[i], vel_c[i]) for i in range(len(pos_c))])
+        r_c_p = np.array([np.cross(pos_c[i], mp[i]*vel_c[i]) for i in range(len(pos_c))])
         J_x = np.sum(r_c_p[:,0])
         J_y = np.sum(r_c_p[:,1])
         J_z = np.sum(r_c_p[:,2])
-        return np.array([J_x, J_y, J_z])*mass_trunc
+        return np.array([J_x, J_y, J_z])
 
-    def spin_param(self, J, R):
+    def bullock_spin_param(self, J, R):
 
         r"""
         Bullock Spin parameter:
@@ -91,7 +105,6 @@ class PhysProps:
 
         #J_n = np.linalg.norm(J) # Norm of J
         J_n = np.sqrt(J[0]**2 + J[1]**2 + J[2]**2)
-        print(J_n)
          # Enclosed mass within Rmax
 
         print('Assumes that the velocities are in km/s, Masses in Msun and distances in kpc.')
@@ -99,25 +112,34 @@ class PhysProps:
         mass_trunc = np.sum(self.mass[index])
         
         V_c = np.sqrt(self.G.value*mass_trunc/(R)) # V_c at Rmax and M_t
-        print(V_c, mass_trunc, R)
         Lambda = J_n / (np.sqrt(2.0) * mass_trunc * V_c * R)
         
-        print(Lambda)
         assert Lambda <=1 ,'Error lambda is larger than 1.'
         assert Lambda >0 ,'Error lambda is negative'
         
-        return Lambda.value
+        return Lambda
 
-    def kinetic_energy(vxyz, M):
+    def peebles_spin_parameter(self, J, R):
+        r"""
+
 
         """
-        Kinetic energy:
+        #J_n = np.linalg.norm(J) # Norm of J
+        J_n = np.sqrt(J[0]**2 + J[1]**2 + J[2]**2)
+         # Enclosed mass within Rmax
+
+        print('Assumes that the velocities are in km/s, Masses in Msun and distances in kpc.')
+        index = np.where(self.R<R)[0]
+        mass_trunc = np.sum(self.mass[index])
         
-        
-        """
-        U = 0.5*M*(vxyz[:,0]**2.0+vxyz[:,1]**2.0+vxyz[:,2]**2.0)
-        
-        return U
+        K = self.kinetic_energy(R)
+
+        E = K + self.pot[index]
+        print(np.sum(E), np.sum(K), np.sum(self.pot[index]))
+
+        Lambda_p = np.sqrt(np.sum(E))*J_n/(G*mass_trunc**(5/2.))
+
+        return Lambda_p 
 
 
     def radial_velocity(xyz, vxyz):
