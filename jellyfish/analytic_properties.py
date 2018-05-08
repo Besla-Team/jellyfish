@@ -123,20 +123,20 @@ if __name__ == "__main__":
     M = 1.5e12
     A = 9.56
     a = 20.
-    m = 2.3e11
+    m = 2.5e11
     R = 150.
 
     #r_t1 should be larger than r_t
-    r_t1(R,1, 2, M, A, m, a)#, r_t(R, M , m)
+    print 'this', r_t1(R,1, 2, M, A, m, a)#, r_t(R, M , m)
 
 
     M = 2e12
-    m = 2.3e11
+    m = 2.5e11
     A = 9.36
     a = 20.
-    R = 150.
+
 
     #r_t1 should be larger than r_t
-    r_t1(R,1, 2, M, A, m, a), r_t(R, M , m), r_t0(R, 1, M, A, m)
+    print 'this', r_t1(R,1, 2, M, A, m, a), r_t(R, M , m), r_t0(R, 1, M, A, m)
 
     """
