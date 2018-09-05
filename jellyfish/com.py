@@ -115,14 +115,14 @@ def com_disk_potential(xyz, vxyz, Pdisk):
     vz_cm = sum(vz[avg_particles])/len(avg_particles)
     return np.array([x_cm, y_cm, z_cm]), np.array([vx_cm, vy_cm, vz_cm])
 
-def velocities_com(cm_pos, pos, vel, rvir):
+def velocities_com(cm_pos, pos, vel, r_cut=20):
     """
-    Function to compute the COM velocity in a sphere of 10% of Rvir (kpc)
+    Function to compute the COM velocity in a sphere of 20 kpc
     """
     # Compute the distance with respect to the COM
     R_cm = ((pos[:,0]-cm_pos[0])**2 + (pos[:,1]-cm_pos[1])**2 + (pos[:,2]-cm_pos[2])**2)**0.5
     # Select the particles inside 15 kpc
-    index = np.where(R_cm < 0.1*rvir)[0]
+    index = np.where(R_cm < r_cut)[0]
     # Compute the velocities of the COM:
     velx_cm = sum(vel[index,0])/len(vel[index,0])
     vely_cm = sum(vel[index,1])/len(vel[index,1])
