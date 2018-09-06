@@ -7,7 +7,7 @@ from pygadgetreader import *
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from .com import host_sat_particles, CM
+from .com import host_sat_particles, CM, com_disk_potential
 
 #Function that computes the center of mass orbits for the host and satellite simultaneously 
 
