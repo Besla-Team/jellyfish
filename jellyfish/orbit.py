@@ -7,7 +7,7 @@ from pygadgetreader import *
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from .com import host_sat_particles, CM, com_disk_potential
+from .com import host_sat_particles, CM, com_disk_potential, velocities_com
 
 #Function that computes the center of mass orbits for the host and satellite simultaneously 
 
@@ -65,8 +65,9 @@ def orbit(path, snap_name, initial_snap, final_snap, Nhost_particles, delta, lmc
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = com_disk_potential(host_xyz_disk, host_vxyz_disk, host_pot_disk)
             else:
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM(host_xyz, host_vxyz, delta)
+
             sat_rcm[i-initial_snap], sat_vcm[i-initial_snap] = CM(sat_xyz, sat_vxyz, delta)
-            #sat_vx, sat_vy, sat_vz, R_shell = ss_velocities(sat_rcm[i-initial_snap], sat_xyz, sat_vxyz, 0.5)
+            sat_vcm =  velocities_com(sat_rcm[i-initial_snap], sat_xyz, sat_vxyz, 1)
             #plot_velocities(sat_vx, sat_vy, sat_vz, R_shell, i-initial_snap)
 
         else:
@@ -74,7 +75,8 @@ def orbit(path, snap_name, initial_snap, final_snap, Nhost_particles, delta, lmc
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM_disk_potential(host_xyz_disk, host_vxyz_disk, host_pot_disk)
             else:
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM(xyz, vxyz, delta)
-
+                sat_rcm = 0
+                sat_vcm = 0
     
     return host_rcm, host_vcm, sat_rcm, sat_vcm
 
