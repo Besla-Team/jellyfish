@@ -53,7 +53,14 @@ def orbit(path, snap_name, initial_snap, final_snap, Nhost_particles, delta, lmc
 
         ## computing COM
         if lmc==True:
-            host_xyz, host_vxyz, sat_xyz, sat_vxyz = host_sat_particles(pids, Nhost_particles, 1, xyz, vxyz)
+            host_particles = host_sat_particles(pids, Nhost_particles, 0, xyz, vxyz) 
+            host_xyx = host_particles[0]
+            host_vxyx = host_particles[1]
+
+            sat_particles = host_sat_particles(pids, Nhost_particles, 1, xyz, vxyz)
+            sat_xyx = host_particles[0]
+            sat_vxyx = host_particles[1]
+
             if disk==True:
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM_disk_potential(host_xyz_disk, host_vxyz_disk, host_pot_disk)
             else:
