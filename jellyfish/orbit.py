@@ -66,7 +66,7 @@ def orbit(path, snap_name, initial_snap, final_snap, Nhost_particles, delta, lmc
             else:
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM(host_xyz, host_vxyz, delta)
             sat_rcm[i-initial_snap], sat_vcm[i-initial_snap] = CM(sat_xyz, sat_vxyz, delta)
-            sat_vx, sat_vy, sat_vz, R_shell = ss_velocities(sat_rcm[i-initial_snap], sat_xyz, sat_vxyz, 0.5)
+            #sat_vx, sat_vy, sat_vz, R_shell = ss_velocities(sat_rcm[i-initial_snap], sat_xyz, sat_vxyz, 0.5)
             #plot_velocities(sat_vx, sat_vy, sat_vz, R_shell, i-initial_snap)
 
         else:
@@ -75,6 +75,7 @@ def orbit(path, snap_name, initial_snap, final_snap, Nhost_particles, delta, lmc
             else:
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM(xyz, vxyz, delta)
 
+    
     return host_rcm, host_vcm, sat_rcm, sat_vcm
 
 
