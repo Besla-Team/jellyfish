@@ -83,7 +83,7 @@ def host_sat_particles(pids, list_num_particles, gal_ind, *args):
         N_cut_min = sort_indexes[int(sum(list_num_particles[:gal_ind]))]
         N_cut_max = sort_indexes[int(sum(list_num_particles[:gal_ind+1]))]
 
-    sat_ids = np.where((pids>=N_cut_min) & (pids<=N_cut_max))[0] # selecting id
+    sat_ids = np.where((pids>N_cut_min) & (pids<=N_cut_max))[0] # selecting id
     assert len(sat_ids)==list_num_particles[gal_ind], 'Something went wrong selecting the satellite particles'
 
     results = []
