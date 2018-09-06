@@ -62,7 +62,7 @@ def orbit(path, snap_name, initial_snap, final_snap, Nhost_particles, delta, lmc
             sat_vxyx = host_particles[1]
 
             if disk==True:
-                host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM_disk_potential(host_xyz_disk, host_vxyz_disk, host_pot_disk)
+                host_rcm[i-initial_snap], host_vcm[i-initial_snap] = com_disk_potential(host_xyz_disk, host_vxyz_disk, host_pot_disk)
             else:
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM(host_xyz, host_vxyz, delta)
             sat_rcm[i-initial_snap], sat_vcm[i-initial_snap] = CM(sat_xyz, sat_vxyz, delta)
