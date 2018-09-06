@@ -129,7 +129,7 @@ def velocities_com(cm_pos, pos, vel, r_cut=20):
     vely_cm = sum(vel[index,1])/len(vel[index,1])
     velz_cm = sum(vel[index,2])/len(vel[index,2])
 
-    return velx_cm, vely_cm, velz_cm
+    return np.array([velx_cm, vely_cm, velz_cm])
 
 
 def CM(xyz, vxyz, delta=0.025):

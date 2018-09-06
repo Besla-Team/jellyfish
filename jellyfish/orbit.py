@@ -75,6 +75,7 @@ def orbit(path, snap_name, initial_snap, final_snap, Nhost_particles, delta, lmc
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM_disk_potential(host_xyz_disk, host_vxyz_disk, host_pot_disk)
             else:
                 host_rcm[i-initial_snap], host_vcm[i-initial_snap] = CM(xyz, vxyz, delta)
+                host_vcm =  velocities_com(host_rcm[i-initial_snap], host_xyz, host_vxyz, 1)
                 sat_rcm = 0
                 sat_vcm = 0
     
