@@ -150,3 +150,36 @@ def Mh2Mvir(omegam, h, Mvir, a200=False):
         ratio = (a_200/rs)**2 / (2*f(cvir))
     return ratio
 
+class CosmologicalTools:
+    # Define a class that provides functions to compute various cosmological quantities
+    # for a given cosmology
+    # this function is called as CosmologicalTools(OmegaM, OmegaL, h)
+    
+    def __init__(self, OmegaM, OmegaR, OmegaL, h):
+        # initialize the instance of the class - for any given Cosmology
+        # Input:    Omega M matter density parameter
+        #           Omega R radiation density parameter
+        #           Omega L  dark energy density parameter
+        #           h  normalization for the hubble parameter
+        
+        # initialize the cosmology
+        self.OmegaM = OmegaM # Matter Density Parameter
+        self.OmegaL = OmegaL  # Dark Energy Density Parameter
+        self.OmegaR = OmegaR # Radiation density Parameter
+        self.OmegaK = 1.0 - (OmegaM + OmegaL + OmegaR)  # Curvature Parameter
+        self.c = 299792.458 # km/s
+        
+        self.h = h   # Normalization of Hubble Parameter
+        self.Ho = h*100*u.km/u.s/u.Mpc #  Hubble Constant at z=0  100 h km/s/Mpc
+        self.HoDimless = h*100 #  Hubble Constant at z=0  100 h km/s/Mpc
+        
+        if self.OmegaK > 0:
+            k = -1
+            self.Rc = np.sqrt((-k*self.c**2)/((self.HoDimless**2)*self.OmegaK))
+
+    def HubbleParameterZDimless(self, z):
+        # Function that defines the Hubble Parameter as a function of redshift
+        # Input:   Redshift z
+        # Returns: The Hubble parameter at the given redshift in units of km/s/Mpc
+        Hz=np.sqrt(self.HoDimless**2*(self.OmegaM*(1+z)**3+self.OmegaR*(1+z)**2+self.OmegaL))
+        return Hz
