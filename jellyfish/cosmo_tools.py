@@ -17,6 +17,8 @@ from numpy.linalg import norm
 from scipy.integrate import simps
 import astropy.units as u
 from astropy import constants
+import scipy.integrate as integrate
+from scipy.integrate import quad
 
 G = constants.G.to(u.kpc * u.km**2. / u.Msun/ u.s**2.)
 
@@ -151,35 +153,150 @@ def Mh2Mvir(omegam, h, Mvir, a200=False):
     return ratio
 
 class CosmologicalTools:
-    # Define a class that provides functions to compute various cosmological quantities
-    # for a given cosmology
-    # this function is called as CosmologicalTools(OmegaM, OmegaL, h)
-    
+    '''
+    Author: Katie Chamberlain - 2018
+	Compute various cosmological quantities for
+    a given cosmology. 
+    Function is called as CosmologicalTools(OmegaM, OmegaR, OmegaL, h)
+    '''
+        
     def __init__(self, OmegaM, OmegaR, OmegaL, h):
-        # initialize the instance of the class - for any given Cosmology
-        # Input:    Omega M matter density parameter
-        #           Omega R radiation density parameter
-        #           Omega L  dark energy density parameter
-        #           h  normalization for the hubble parameter
+        '''
+        initialize class - for any cosmology:
+        Inputs:    Omega M matter density parameter
+                   Omega R radiation density parameter
+                   Omega L  dark energy density parameter
+                   h  normalization for the hubble parameter
+        '''
         
         # initialize the cosmology
         self.OmegaM = OmegaM # Matter Density Parameter
-        self.OmegaL = OmegaL  # Dark Energy Density Parameter
+        self.OmegaL = OmegaL # Dark Energy Density Parameter
         self.OmegaR = OmegaR # Radiation density Parameter
         self.OmegaK = 1.0 - (OmegaM + OmegaL + OmegaR)  # Curvature Parameter
+        self.h = h # Normalization of Hubble Parameter   
+        self.Ho = h*100 # Hubble Constant at z=0  100 h km/s/Mpc
+
+        # physical constants
         self.c = 299792.458 # km/s
-        
-        self.h = h   # Normalization of Hubble Parameter
-        self.Ho = h*100*u.km/u.s/u.Mpc #  Hubble Constant at z=0  100 h km/s/Mpc
-        self.HoDimless = h*100 #  Hubble Constant at z=0  100 h km/s/Mpc
-        
+            
+        # if open universe, compute the radius of curvature for distance measure
         if self.OmegaK > 0:
             k = -1
-            self.Rc = np.sqrt((-k*self.c**2)/((self.HoDimless**2)*self.OmegaK))
-
-    def HubbleParameterZDimless(self, z):
-        # Function that defines the Hubble Parameter as a function of redshift
-        # Input:   Redshift z
-        # Returns: The Hubble parameter at the given redshift in units of km/s/Mpc
-        Hz=np.sqrt(self.HoDimless**2*(self.OmegaM*(1+z)**3+self.OmegaR*(1+z)**2+self.OmegaL))
+            self.Rc = np.sqrt((-k*self.c**2)/((self.Ho**2)*self.OmegaK)) 
+    
+    def HubbleParameterZ(self, z):
+        '''
+        Hubble parameter as a function of redshift
+        Redshift can be number or array - Returns in units of km/s/Mpc
+        '''       
+        Omz = self.OmegaM*(1+z)**3
+        Orz = self.OmegaR*(1+z)**4
+        OKz = self.OmegaK*(1+z)**2
+        OLz = self.OmegaL
+        Hz=np.sqrt(self.Ho**2*(Omz+Orz+OKz+OLz))
         return Hz
+
+    def OmegaM_Z(self,z):
+        '''
+        Matter density parameter as a function of redshift
+        Redshift can be number or array
+        '''
+        omz = self.OmegaM*(1+z)**3*(self.Ho/self.HubbleParameterZ(z))**2
+        return omz
+    
+    def OmegaR_Z(self,z):
+        '''
+        Radiation density parameter as a function of redshift
+        Redshift can be number or array
+        '''
+        orz = self.OmegaR*(1+z)**4*(self.Ho/self.HubbleParameterZ(z))**2
+        return orz
+    
+    def OmegaL_Z(self,z):
+        '''
+        Dark energy density parameter as a function of redshift
+        Redshift can be number or array
+        '''
+        olz = self.OmegaL*(self.Ho/self.HubbleParameterZ(z))**2
+        return olz
+
+    def comovingDistance(self,z):
+        '''
+        calculates comoving distance as a function of redshift
+        Redshift must be number (not array!) - gives distance between 0 and z
+        '''
+        def integrand(x):
+            return self.c/self.HubbleParameterZ(x)
+        return integrate.quad(integrand, 0, z)[0]
+    
+    def distanceMeasure(self,z):
+        '''
+        calculates distance measure if the universe is open
+        Redshift must be number
+        '''
+        if self.OmegaK > 0:
+            return self.Rc*np.sinh(self.comovingDistance(z)/self.Rc)
+        else: 
+            return self.comovingDistance(z)
+    
+    def angularDiameter(self,z):
+        '''
+        angular diameter distance as a function of redshift
+        Redshift must be number - integrates between 0 and z
+        '''
+        return self.distanceMeasure(z)/(1+z) # Mpc/rad
+    
+    def luminosityDistance(self,z):
+        '''
+        luminosity distance as a function of redshift
+        Redshift must be number - integrates between 0 and z
+        '''
+        return self.distanceMeasure(z)*(1+z)
+    
+    def distanceModulus(self,z):
+        '''
+        distance modulus at z
+        Redshift must be number
+        '''
+        return (5*np.log10(self.luminosityDistance(z)*1e5))
+        
+    def lookbackTime(self,z):
+        '''
+        lookback time at z
+        Redshift must be number - from z=0 to z and returns in gigayears
+        '''
+        def integrand(x):
+                return (self.HubbleParameterZ(x)*(1+x))**-1
+        return integrate.quad(integrand, 0, z)[0]*9.77799e2
+
+    def ageUniverse(self,z):
+        '''
+        age of the universe at z
+        Redshift must be number - from z to infinity and returns in gigayears
+        '''
+        def integrand(x):
+                return (self.HubbleParameterZ(x)*(1+x))**-1
+        intTotal = integrate.quad(integrand, 0, np.inf)[0]*9.77799e2
+        return intTotal-self.lookbackTime(z)
+    
+    def comovingVolume(self,z):
+        '''
+        comoving volume per deg squared per z at a given z
+        Redshift must be number - between z=0 and z in Mpc^3/deg^2/z
+        '''
+        st = 41253/(4*np.pi) # 1 steradian is this many square degrees
+        return (self.distanceMeasure(z)**2)*self.c/self.HubbleParameterZ(z)/st
+    
+    def H0Limits(self,t):
+        '''
+        enter time in Gyr
+        returns the upper bound on the hubble constant 
+        for a universe with age t or older in km/s/Mpc
+        '''
+        def integrand(x):
+                return ((self.HubbleParameterZ(x)/self.Ho)*(1+x))**-1
+        unitConv = ((1)/(3.154e16))*((1)/(3.241e-20)) # 1/gyr to km/s/Mpc
+        return (integrate.quad(integrand, 0, np.inf)[0]/t)*unitConv
+
+    
