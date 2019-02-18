@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import distributions as dist
 
 ###################################################
 #  Katie Chamberlain  -  February 2019            #
@@ -20,6 +19,8 @@ import distributions as dist
 #     plotting routine if show is preferred             #
 #  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  #
 
+f = np.random.normal
+
 def logM1(z, kind = "median"):
     """eq. 11"""
     M10      = 11.59
@@ -30,7 +31,7 @@ def logM1(z, kind = "median"):
     if kind == "median":                 # picking out only the median value
         return M10 + M11*(z/(1+z))
     else:                                # picking gaussian distributed variables
-        M10Gauss, M11Gauss = dist.gaussianDist(1, M10range, M10, M11range, M11)
+        M10Gauss, M11Gauss = f(M10, M10range,1), f(M11, M11range, 1)
         return M10Gauss + M11Gauss*(z/(1+z))
     
 def N(z, kind="median"):
@@ -43,7 +44,7 @@ def N(z, kind="median"):
     if kind == "median":                 # picking out only the median value
         return N10 + N11*(z/(1+z))
     else:                                # picking gaussian distributed variables
-        N10Gauss, N11Gauss = dist.gaussianDist(1, N10range, N10, N11range, N11)
+        N10Gauss, N11Gauss = f(N10, N10range,1),f(N11, N11range, 1)
         return N10Gauss + N11Gauss*(z/(1+z))
     
 def beta(z, kind="median"):
@@ -56,7 +57,7 @@ def beta(z, kind="median"):
     if kind == "median":                 # picking out only the median value
         return beta10 + beta11*(z/(1+z))
     else:                                # picking gaussian distributed variables
-        beta10Gauss, beta11Gauss = dist.gaussianDist(1, beta10range, beta10, beta11range, beta11)
+        beta10Gauss, beta11Gauss = f(beta10, beta10range,1),f(beta11, beta11range, 1)
         return beta10Gauss + beta11Gauss*(z/(1+z))   
 
 def gamma(z, kind="median"):
@@ -69,7 +70,7 @@ def gamma(z, kind="median"):
     if kind == "median":                 # picking out only the median value
         return gamma10 + gamma11*(z/(1+z))
     else:                                # picking gaussian distributed variables
-        gamma10Gauss, gamma11Gauss = dist.gaussianDist(1, gamma10range, gamma10, gamma11range, gamma11)
+        gamma10Gauss, gamma11Gauss = f(gamma10, gamma10range,1),f( gamma11, gamma11range, 1)
         return gamma10Gauss + gamma11Gauss*(z/(1+z))
 
 def SHMratio(M, z, kind="median"):
