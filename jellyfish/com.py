@@ -2,11 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import sys
 from pygadgetreader import *
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 #Function that computes the center of mass for the halo and disk and
 # the corresponsing orbits for the host and satellite simultaneously
@@ -132,7 +128,32 @@ def velocities_com(cm_pos, pos, vel, r_cut=20):
     return np.array([velx_cm, vely_cm, velz_cm])
 
 
-def CM(xyz, vxyz, delta=0.025):
+
+def COM(xyz, vxyz, m):
+    """
+    Returns the COM positions and velocities. 
+
+    \vec{R} = \sum_i^N m_i \vec{r_i} / N
+    
+    """
+
+
+    # Number of particles 
+    N = sum(m)
+
+
+    xCOM = np.sum(xyz[:,0]*m)/N
+    yCOM = np.sum(xyz[:,1]*m)/N
+    zCOM = np.sum(xyz[:,2]*m)/N
+
+    vxCOM = np.sum(vxyz[:,0]*m)/N
+    vyCOM = np.sum(vxyz[:,1]*m)/N
+    vzCOM = np.sum(vxyz[:,2]*m)/N
+
+    return [xCOM, yCOM, zCOM], [vxCOM, vyCOM, vzCOM]
+
+
+def CM(xyz, vxyz, m, delta=0.025):
     """
     Compute the center of mass coordinates and velocities of a halo
     using the Shrinking Sphere Method Power et al 2003.
@@ -154,13 +175,16 @@ def CM(xyz, vxyz, delta=0.025):
     N_i = len(xyz)
     N = N_i
 
+    
     xCM = 0.0
     yCM = 0.0
     zCM = 0.0
 
-    xCM_new = sum(xyz[:,0])/N_i
-    yCM_new = sum(xyz[:,1])/N_i
-    zCM_new = sum(xyz[:,2])/N_i
+
+    rCOM, vCOM = COM(xyz, vxyz, m)
+    xCM_new, yCM_new, zCM_new = rCOM
+    vxCM_new, vyCM_new, vzCM_new = vCOM
+  
 
 
     while (((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2 + (zCM_new-zCM)**2) > delta) & (N>N_i*0.01)) | (N>1000)):
@@ -168,19 +192,18 @@ def CM(xyz, vxyz, delta=0.025):
         yCM = yCM_new
         zCM = zCM_new
         # Re-centering sphere
-        xyz[:,0] = xyz[:,0]
-        xyz[:,1] = xyz[:,1]
-        xyz[:,2] = xyz[:,2]
         R = np.sqrt((xyz[:,0]-xCM_new)**2 + (xyz[:,1]-yCM_new)**2 + (xyz[:,2]-zCM_new)**2)
         Rmax = np.max(R)
         # Reducing Sphere by its 2.5%
         index = np.where(R<Rmax*0.975)[0]
         xyz = xyz[index]
+        vxyz = vxyz[index]
+        m = m[index]
         N = len(xyz)
         #Computing new CM coordinates and velocities
-        xCM_new = np.sum(xyz[:,0])/N
-        yCM_new = np.sum(xyz[:,1])/N
-        zCM_new = np.sum(xyz[:,2])/N
+        COM(xyz, vxyz, m)
+        xCM_new, yCM_new, zCM_new = rCOM
+        vxCM_new, vyCM_new, vzCM_new = vCOM
 
     vxCM_new, vyCM_new, vzCM_new = velocities_com([xCM_new, yCM_new, zCM_new], xyz, vxyz)
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])

@@ -32,7 +32,8 @@ class Hello_sim:
 
         """
         self.path = path
-        self.host_npart = host_napart
+        self.snap = snap_name
+        self.host_npart = host_npart
         self.sat_npart = sat_npart
         self.snap_name = snap_name
         self.component = component
@@ -80,9 +81,92 @@ class Hello_sim:
         N_cut = sort_indexes[Nhost_particles]
         sat_indices = np.where(pids>=N_cut)[0]
         return sat_induces
+        
+    def COM(self, xyz, vxyz, m):
+        """
+        Returns the COM positions and velocities. 
+
+        \vec{R} = \sum_i^N m_i \vec{r_i} / N
+        
+        """
 
 
-    def com_disk_potential(self, xyz, vxyz, Pdisk, v_rad=2):
+        # Number of particles 
+        N = sum(m)
+
+
+        xCOM = np.sum(xyz[:,0]*m)/N
+        yCOM = np.sum(xyz[:,1]*m)/N
+        zCOM = np.sum(xyz[:,2]*m)/N
+
+        vxCOM = np.sum(vxyz[:,0]*m)/N
+        vyCOM = np.sum(vxyz[:,1]*m)/N
+        vzCOM = np.sum(vxyz[:,2]*m)/N
+
+        return [xCOM, yCOM, zCOM], [vxCOM, vyCOM, vzCOM]
+
+    def com_shriking_sphere(self, m, delta=0.025):
+        """
+        Compute the center of mass coordinates and velocities of a halo
+        using the Shrinking Sphere Method Power et al 2003.
+        It iterates in radii until reach a convergence given by delta
+        or 1% of the total number of particles.
+
+        Parameters:
+        -----------
+        xyz: cartesian coordinates with shape (n,3)
+        vxys: cartesian velocities with shape (n,3)
+        delta(optional): Precision of the CM, D=0.025
+
+        Returns:
+        --------
+        rcm, vcm: 2 arrays containing the coordinates and velocities of
+        the center of mass with reference to a (0,0,0) point.
+
+        """
+        N_i = len(xyz)
+        N = N_i
+
+        
+        xCM = 0.0
+        yCM = 0.0
+        zCM = 0.0
+
+        xyz = self.pos
+        vxyz = self.vel
+        
+        rCOM, vCOM = COM(xyz, vxyz, m)
+        xCM_new, yCM_new, zCM_new = rCOM
+        vxCM_new, vyCM_new, vzCM_new = vCOM
+      
+
+
+        while (((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2 + (zCM_new-zCM)**2) > delta) & (N>N_i*0.01)) | (N>1000)):
+            xCM = xCM_new
+            yCM = yCM_new
+            zCM = zCM_new
+            # Re-centering sphere
+            R = np.sqrt((xyz[:,0]-xCM_new)**2 + (xyz[:,1]-yCM_new)**2 + (xyz[:,2]-zCM_new)**2)
+            Rmax = np.max(R)
+            # Reducing Sphere by its 2.5%
+            index = np.where(R<Rmax*0.975)[0]
+            xyz = xyz[index]
+            vxyz = vxyz[index]
+            m = m[index]
+            N = len(xyz)
+            #Computing new CM coordinates and velocities
+            COM(xyz, vxyz, m)
+            xCM_new, yCM_new, zCM_new = rCOM
+            vxCM_new, vyCM_new, vzCM_new = vCOM
+
+        if self.prop == 'pos':
+            i_com , j_com, k_com = xCM_new, yCM_new, zCM_new
+        elif self.prop == 'vel' :
+            i_com, j_com, k_com = velocities_com([xCM_new, yCM_new, zCM_new], xyz, vxyz)
+            
+        return np.array([i_com, j_com, k_com])
+
+    def com_disk_potential(self, v_rad=2):
         """
         Function to compute the COM of the disk using the most bound particles
         within a sphere of 2 kpc.
@@ -103,14 +187,19 @@ class Hello_sim:
                                          (self.pos_disk[:,1]-y_min)**2.0 +
                                          (self.pos_disk[:,2]-z_min)**2.0) < v_rad)[0]
 
-        x_cm = sum(self.pos_disk[avg_particles,0])/len(avg_particles)
-        y_cm = sum(self.pos_disk[avg_particles,1])/len(avg_particles)
-        z_cm = sum(self.pos_disk[avg_particles,2])/len(avg_particles)
         vx_cm = sum(self.vel_disk[avg_particles,0])/len(avg_particles)
         vy_cm = sum(self.vel_disk[avg_particles,1])/len(avg_particles)
         vz_cm = sum(self.vel_disk[avg_particles,2])/len(avg_particles)
+        if self.prop == 'pos':
+            i_cm = sum(self.pos_disk[avg_particles,0])/len(avg_particles)
+            j_cm = sum(self.pos_disk[avg_particles,1])/len(avg_particles)
+            k_cm = sum(self.pos_disk[avg_particles,2])/len(avg_particles)
+        elif self.prop == 'vel':
+            i_cm = sum(self.vel_disk[avg_particles,0])/len(avg_particles)
+            j_cm = sum(self.vel_disk[avg_particles,1])/len(avg_particles)
+            k_cm = sum(self.vel_disk[avg_particles,2])/len(avg_particles)
 
-        return np.array([x_cm, y_cm, z_cm]), np.array([vx_cm, vy_cm, vz_cm])
+        return np.array([i_cm, j_cm, k_cm])
 
     def re_center(self, vec, com):
 
@@ -149,40 +238,45 @@ class Hello_sim:
 
         """
 
-        if (self.component == 'host_dm') |  (self.component == 'sat_dm')):
+        if ((self.component == 'host_dm') |  (self.component == 'sat_dm')):
             pos = readsnap(self.path+self.snap, 'pos', 'dm')
             vel = readsnap(self.path+self.snap, 'vel', 'dm')
             ids = readsnap(self.path+self.snap, 'pid', 'dm')
-            x = readsnap(self.path + self.snap, self.prop, 'dm')    
+            y = readsnap(self.path + self.snap, self.prop, 'dm')    
 
             if self.component == 'host_dm':
-                ids_host = host_particles(ids, self.host_npart)
-                y = x[ids_host]
+                ids_host = self.host_particles(ids, self.host_npart)
+                x = y[ids_host]
             elif self.component == 'sat_dm':
-                ids_sat = host.partiles(ids, self.host_npart)
-                y = x[ids_sat]
+                ids_sat = self.host.partiles(ids, self.host_npart)
+                x = y[ids_sat]
 
         else :
             x = readsnap(self.path + self.snap, self.prop, self.component)
 
         if self.com == 'com_host_disk':
+            # Add assertion to check if the disk potential is available.
             self.pos_disk = readsnap(self.path+self.snap, 'pos', 'disk')
             self.vel_disk = readsnap(self.path+self.snap, 'vel', 'disk')
             self.pot_disk = readsnap(self.path+self.snap, 'pot', 'disk')
-            pos_cm, vel_cm = bcom_disk_potential(pos_disk, vel_disk, pot_disk)
+            com = self.com_disk_potential()
+            x = self.re_center(x, com)
 
-        
-        MW_pos_cm = re_center(MW_pos, pos_cm)
-        MW_vel_cm = re_center(MW_vel, vel_cm)
+        elif self.com == 'com_sat':
+            self.pos = readsnap(self.path+self.snap, 'pos', self.component)
+            self.vel = readsnap(self.path+self.snap, 'vel', self.component)
+            com = self.com_shrinking_sphere(m=np.ones(len(self.pos)))
+            x = self.re_center(x, com)
+            
+        elif self.com == 'com_000':
+            pass 
         
         #if 'LSR' in kwargs:
         #    pos_LSR = np.array([-8.34, 0, 0])
         #    vel_LSR = np.array([11.1,  232.24,  7.25])
             # Values from http://docs.astropy.org/en/stable/api/astropy.coordinates.Galactocentric.html
-            MW_pos_cm = re_center(MW_pos_cm, pos_LSR)
-            MW_vel_cm = re_center(MW_vel_cm, vel_LSR)
             
-        assert len(MW_pos) == N_halo_part, 'something is wrong with the number of selected particles'
+        #assert len(MW_pos) == N_halo_part, 'something is wrong with the number of selected particles'
 
-        
+        return x
         

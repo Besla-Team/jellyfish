@@ -7,3 +7,4 @@ from .shapes import *
 from .physical_properties import *
 from .plotgadget import *
 from .plotgadgetall import *
+from .reading_snapshots import *
