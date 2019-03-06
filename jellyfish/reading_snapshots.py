@@ -25,7 +25,7 @@ class Hello_sim:
             What coordinates center to use. 
             'com_host': com of the host
             'com_sat' : com of the satellite
-            'com_000' : com at the 0,0,0 point.
+            'com_xyz' : com at the 0,0,0 point.
             'com_host_disk' : com at the host disk using its potential
         prop : str
             What properties of the particles to return ('pos', 'vel', 'pot','mass', 'ids')
@@ -80,7 +80,7 @@ class Hello_sim:
         sort_indexes = np.sort(pids)
         N_cut = sort_indexes[Nhost_particles]
         sat_indices = np.where(pids>=N_cut)[0]
-        return sat_induces
+        return sat_indices
         
     def COM(self, xyz, vxyz, m):
         """
@@ -105,7 +105,7 @@ class Hello_sim:
 
         return [xCOM, yCOM, zCOM], [vxCOM, vyCOM, vzCOM]
 
-    def com_shriking_sphere(self, m, delta=0.025):
+    def com_shrinking_sphere(self, m, delta=0.025):
         """
         Compute the center of mass coordinates and velocities of a halo
         using the Shrinking Sphere Method Power et al 2003.
@@ -124,9 +124,6 @@ class Hello_sim:
         the center of mass with reference to a (0,0,0) point.
 
         """
-        N_i = len(xyz)
-        N = N_i
-
         
         xCM = 0.0
         yCM = 0.0
@@ -134,8 +131,11 @@ class Hello_sim:
 
         xyz = self.pos
         vxyz = self.vel
+
+        N_i = len(xyz)
+        N = N_i
         
-        rCOM, vCOM = COM(xyz, vxyz, m)
+        rCOM, vCOM = self.COM(xyz, vxyz, m)
         xCM_new, yCM_new, zCM_new = rCOM
         vxCM_new, vyCM_new, vzCM_new = vCOM
       
@@ -149,20 +149,21 @@ class Hello_sim:
             R = np.sqrt((xyz[:,0]-xCM_new)**2 + (xyz[:,1]-yCM_new)**2 + (xyz[:,2]-zCM_new)**2)
             Rmax = np.max(R)
             # Reducing Sphere by its 2.5%
-            index = np.where(R<Rmax*0.975)[0]
+            index = np.where(R<Rmax*0.75)[0]
             xyz = xyz[index]
             vxyz = vxyz[index]
             m = m[index]
             N = len(xyz)
             #Computing new CM coordinates and velocities
-            COM(xyz, vxyz, m)
+            rCOM, vCOM = self.COM(xyz, vxyz, m)
             xCM_new, yCM_new, zCM_new = rCOM
             vxCM_new, vyCM_new, vzCM_new = vCOM
 
         if self.prop == 'pos':
-            i_com , j_com, k_com = xCM_new, yCM_new, zCM_new
-        elif self.prop == 'vel' :
-            i_com, j_com, k_com = velocities_com([xCM_new, yCM_new, zCM_new], xyz, vxyz)
+            i_com, j_com, k_com = xCM_new, yCM_new, zCM_new
+        elif self.prop == 'vel':
+            print('this is not implemented yet')
+            #i_com, j_com, k_com = velocities_com([xCM_new, yCM_new, zCM_new], xyz, vxyz)
             
         return np.array([i_com, j_com, k_com])
 
@@ -248,7 +249,7 @@ class Hello_sim:
                 ids_host = self.host_particles(ids, self.host_npart)
                 x = y[ids_host]
             elif self.component == 'sat_dm':
-                ids_sat = self.host.partiles(ids, self.host_npart)
+                ids_sat = self.sat_particles(ids, self.host_npart)
                 x = y[ids_sat]
 
         else :
@@ -263,13 +264,16 @@ class Hello_sim:
             x = self.re_center(x, com)
 
         elif self.com == 'com_sat':
-            self.pos = readsnap(self.path+self.snap, 'pos', self.component)
-            self.vel = readsnap(self.path+self.snap, 'vel', self.component)
+	    # Generalize this to any particle type.
+            self.pos = readsnap(self.path+self.snap, 'pos', 'dm')
+            self.vel = readsnap(self.path+self.snap, 'vel', 'dm')
             com = self.com_shrinking_sphere(m=np.ones(len(self.pos)))
+            print('Satellite COM computed with the Shrinking Sphere Algorithm at', com)
             x = self.re_center(x, com)
             
-        elif self.com == 'com_000':
-            pass 
+        elif type(self.com) != str:
+            x = self.re_center(x, self.com)
+             
         
         #if 'LSR' in kwargs:
         #    pos_LSR = np.array([-8.34, 0, 0])
