@@ -178,7 +178,7 @@ class Hello_sim:
             Radius of the sphere in kpc (default : 2 kpc)
 
         """
-        min_pot = np.where(self.Pdisk==min(self.Pdisk))[0]
+        min_pot = np.where(self.pot_disk==min(self.pot_disk))[0]
         x_min = self.pos_disk[min_pot,0]
         y_min = self.pos_disk[min_pot,1]
         z_min = self.pos_disk[min_pot,2]
