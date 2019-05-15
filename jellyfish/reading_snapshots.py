@@ -215,7 +215,7 @@ class Hello_sim:
         return vec_new
 
 
-    def read_MW_snap_com_coordinates(self):#path, snap, LMC, N_halo_part, pot, **kwargs):
+    def read_MW_snap_com_coordinates(self, delta=0.025):#path, snap, LMC, N_halo_part, pot, **kwargs):
         """
         Returns the MW properties.
         
@@ -239,7 +239,7 @@ class Hello_sim:
 
         """
 
-        if ((self.component == 'host_dm') |  (self.component == 'sat_dm')):
+        if ((self.component == 'host_dm') | (self.component == 'sat_dm')):
             pos = readsnap(self.path+self.snap, 'pos', 'dm')
             vel = readsnap(self.path+self.snap, 'vel', 'dm')
             ids = readsnap(self.path+self.snap, 'pid', 'dm')
@@ -265,9 +265,10 @@ class Hello_sim:
 
         elif self.com == 'com_sat':
 	    # Generalize this to any particle type.
+            print('Computing COM of the Satellite using Shrinking Sphere Algorithm')
             self.pos = readsnap(self.path+self.snap, 'pos', 'dm')
             self.vel = readsnap(self.path+self.snap, 'vel', 'dm')
-            com = self.com_shrinking_sphere(m=np.ones(len(self.pos)))
+            com = self.com_shrinking_sphere(m=np.ones(len(self.pos)), delta)
             print('Satellite COM computed with the Shrinking Sphere Algorithm at', com)
             x = self.re_center(x, com)
             
@@ -283,4 +284,3 @@ class Hello_sim:
         #assert len(MW_pos) == N_halo_part, 'something is wrong with the number of selected particles'
 
         return x
-        
