@@ -25,7 +25,7 @@ def volumes(x, y, z, r, q, s):
     return x_vol, y_vol, z_vol
 
 #Computing the shape tensor
-def shape_tensor(x y,z):
+def shape_tensor(x, y,z):
     """
     Compute the shape tensor as defined in Chua+18
     https://ui.adsabs.harvard.edu/abs/2019MNRAS.484..476C/abstract
