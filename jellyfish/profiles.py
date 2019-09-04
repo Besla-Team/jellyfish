@@ -1,8 +1,8 @@
 # various analytic mass profiles: Hernquist, NFW, Plummer, Isothermal, Miyamoto-Nagai (for disks)
 import numpy as np
-from cosmo_tools import *
 import astropy.units as u
 from astropy import constants
+from .cosmo_tools import *
 
 G = constants.G.to(u.kpc * u.km**2. / u.Msun/ u.s**2.)
 
