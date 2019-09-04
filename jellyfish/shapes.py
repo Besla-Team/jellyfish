@@ -25,7 +25,17 @@ def volumes(x, y, z, r, q, s):
     return x_vol, y_vol, z_vol
 
 #Computing the shape tensor
-def shape_tensor(x, y, z):
+def shape_tensor(x y,z):
+    """
+    Compute the shape tensor as defined in Chua+18
+    https://ui.adsabs.harvard.edu/abs/2019MNRAS.484..476C/abstract
+    S_{ij} = 1/sum_{k}m_k  \sum_{k}1/w_k m_k r_{k,i} r_{k,j}
+    For equal mass particles:
+
+
+    S_{ij} = \sum_{k} k r_{k,i} r_{k,j}
+
+    """
     N = len(x)
     XYZ = np.array([x, y, z])
     shape_T = np.zeros([3, 3])
@@ -39,14 +49,37 @@ def shape_tensor(x, y, z):
 
 #Computing the axis ratios from the
 #eigenvalues of the Shape Tensor
-def axis_ratios(shape_T):
-    eival, evec = linalg.eig(shape_T)
+def axis_ratios(pos):
+    """
+    Computes the axis ratio of the ellipsoid defined by the eigenvalues of
+    the Shape tensor.
+
+    a = major axis
+    b = intermediate axis
+    c = minor axis
+    The axis ratios are defined as:
+
+    q = b/a
+    s = c/a
+    
+    Parameter:
+    ------
+    pos : numpy.ndarray
+        positions of the DM particles.
+
+    Returns:
+    -------
+    s : double 
+    q : double 
+    """
+
+    ST = shape_tensor(pos)
+    eival, evec = linalg.eig(ST)
     oeival = np.sort(eival)
-    a = oeival[2]
-    b = oeival[1]
-    c = oeival[0]
+    c, b, a = oeival[2], oeival[1], oeival[0]
     s = np.sqrt(c/a)
     q = np.sqrt(b/a)
+
     return evec, s, q
 
 def iterate_shell(x, y, z, r, dr, tol):
