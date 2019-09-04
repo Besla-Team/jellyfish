@@ -39,6 +39,6 @@ install:
   #- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION scipy matplotlib numpy
   #- source activate test-environment
   - pip install -r requirements.txt
-  - python setup.py install --user
+  - python setup.py install
 
 script: pytest
