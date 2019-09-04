@@ -4,6 +4,15 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+
+env: 
+    global:
+      - NUMPY_VERSION=stable
+      - SETUP_CMD='test'
+      - CONDA_DEPENDENCIES='scipy matplotlib'  
+
+
+
 install:
   - python setup.py install
 
