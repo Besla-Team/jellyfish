@@ -12,7 +12,7 @@ __status__ = "Beta -- forever."
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from numpy.linalg import norm
 from scipy.integrate import simps
 import astropy.units as u
