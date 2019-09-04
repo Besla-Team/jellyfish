@@ -268,7 +268,7 @@ class Hello_sim:
             print('Computing COM of the Satellite using Shrinking Sphere Algorithm')
             self.pos = readsnap(self.path+self.snap, 'pos', 'dm')
             self.vel = readsnap(self.path+self.snap, 'vel', 'dm')
-            com = self.com_shrinking_sphere(m=np.ones(len(self.pos)), delta)
+            com = self.com_shrinking_sphere(m=np.ones(len(self.pos)), delta=delta)
             print('Satellite COM computed with the Shrinking Sphere Algorithm at', com)
             x = self.re_center(x, com)
             
