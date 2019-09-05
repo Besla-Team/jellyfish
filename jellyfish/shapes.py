@@ -32,7 +32,7 @@ def shape_tensor(pos):
     S_{ij} = \sum_{k} k r_{k,i} r_{k,j}
 
     """
-    assert(shape(pos)[1]==3), "Wrong dimensions for pos"
+    assert(np.shape(pos)[1]==3), "Wrong dimensions for pos"
     shape_T = np.zeros([3, 3])
     npart = len(pos)
     shape_T = np.zeros([3, 3])
