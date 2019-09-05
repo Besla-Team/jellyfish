@@ -8,24 +8,20 @@ To-Do:
 2. Weight function
 """
 
-def shells(x, y, z, width, r, q, s):
-    r_shell = np.sqrt(x**2.0 +y**2.0/q**2.0 +  z**2.0/s**2.0)
-    index_shell = np.where((r_shell<r) & (r_shell>(r-width)))[0]
-    x_shell = x[index_shell]
-    y_shell = y[index_shell]
-    z_shell = z[index_shell]
-    return x_shell, y_shell, z_shell
+def shells(pos, width, r, q, s):
+    r_shell = np.sqrt(pos[:,0]**2.0 +pos[:,1]**2.0/q**2.0 +  pos[:,2]**2.0/s**2.0)
+    index_shell = np.where((r_shell<(r+width/2.)) & (r_shell>(r-width/2.)))[0]
+    pos_shell = pos[index_shell]
+    return pos_shell
 
-def volumes(x, y, z, r, q, s):
-    r_vol = np.sqrt(x**2.0 +y**2.0/q**2.0 +  z**2.0/s**2.0)
+def volumes(pos, r, q, s):
+    r_vol = np.sqrt(pos[:,0]**2.0 +pos[:,1]**2.0/q**2.0 +  pos[:,2]**2.0/s**2.0)
     index_vol = np.where(r_vol<r)[0]
-    x_vol = x[index_vol]
-    y_vol = y[index_vol]
-    z_vol = z[index_vol]
-    return x_vol, y_vol, z_vol
+    pos_vol = pos[index_vol]
+    return pos_vol
 
 #Computing the shape tensor
-def shape_tensor(x, y,z):
+def shape_tensor(pos):
     """
     Compute the shape tensor as defined in Chua+18
     https://ui.adsabs.harvard.edu/abs/2019MNRAS.484..476C/abstract
@@ -36,15 +32,16 @@ def shape_tensor(x, y,z):
     S_{ij} = \sum_{k} k r_{k,i} r_{k,j}
 
     """
-    N = len(x)
-    XYZ = np.array([x, y, z])
+    assert(shape(pos)[1]==3), "Wrong dimensions for pos"
+    shape_T = np.zeros([3, 3])
+    npart = len(pos)
     shape_T = np.zeros([3, 3])
     for i in range(3):
         for j in range(3):
-            XX = np.zeros(N)
-            for n in range(N):
-                XX[n] = XYZ[i,n] * XYZ[j,n]
-            shape_T[i][j] = sum(XX) / N
+            s = np.zeros(npart
+            for n in range(npart):
+                s[n] = pos[n, i] * pos[n,j]
+            shape_T[i][j] = sum(s)
     return shape_T
 
 #Computing the axis ratios from the
@@ -80,7 +77,7 @@ def axis_ratios(pos):
     s = np.sqrt(c/a)
     q = np.sqrt(b/a)
 
-    return evec, s, q
+    return evec, [a, b, c], [s, q]
 
 def iterate_shell(x, y, z, r, dr, tol):
     """
