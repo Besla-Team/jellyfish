@@ -38,7 +38,7 @@ def shape_tensor(pos):
     shape_T = np.zeros([3, 3])
     for i in range(3):
         for j in range(3):
-            s = np.zeros(npart
+            s = np.zeros(npart)
             for n in range(npart):
                 s[n] = pos[n, i] * pos[n,j]
             shape_T[i][j] = sum(s)
