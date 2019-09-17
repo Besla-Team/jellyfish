@@ -4,19 +4,21 @@ from scipy import linalg
 """
 To-Do:
 
-1. Rotation
+1. Rotation (Diagonaizing the shape tensor and rotationg the particles)
 2. Weight function
+
 """
 
 def shells(pos, width, r, q, s):
     r_shell = np.sqrt(pos[:,0]**2.0 +pos[:,1]**2.0/q**2.0 +  pos[:,2]**2.0/s**2.0)
-    index_shell = np.where((r_shell<(r+width/2.)) & (r_shell>(r-width/2.)))[0]
+    index_shell = np.where((r_shell<(r+width/2.)) & (r_shell>(r-width/2.)))
     pos_shell = pos[index_shell]
+  
     return pos_shell
 
 def volumes(pos, r, q, s):
     r_vol = np.sqrt(pos[:,0]**2.0 +pos[:,1]**2.0/q**2.0 +  pos[:,2]**2.0/s**2.0)
-    index_vol = np.where(r_vol<r)[0]
+    index_vol = np.where(r_vol<r)
     pos_vol = pos[index_vol]
     return pos_vol
 
@@ -40,9 +42,29 @@ def shape_tensor(pos):
         for j in range(3):
             s = np.zeros(npart)
             for n in range(npart):
-                s[n] = pos[n, i] * pos[n,j]
+                s[n] = (pos[n,i] * pos[n,j])
             shape_T[i][j] = sum(s)
     return shape_T
+
+
+def sort_eig(eigval, eigvec):
+    """
+    Sorts eigenvalues and eigenvectors in the following order:
+    a: Major eigval
+    b: Intermediate eigval
+    c: Minor eigval
+
+    The eigenvectors are sorted in the same way.
+
+    """
+
+    oeival = np.argsort(eigval)
+    a, b, c = eigval[oeival[2]], eigval[oeival[1]], eigval[oeival[0]]
+    s = np.sqrt(c/a)
+    q = np.sqrt(b/a)
+    eigvec_sort = np.array([eigvec[oeival[2]], eigvec[oeival[1]], eigvec[oeival[0]]])
+    return eigvec_sort, [a, b, c], s, q
+
 
 #Computing the axis ratios from the
 #eigenvalues of the Shape Tensor
@@ -72,14 +94,21 @@ def axis_ratios(pos):
 
     ST = shape_tensor(pos)
     eival, evec = linalg.eig(ST)
-    oeival = np.sort(eival)
-    c, b, a = oeival[2], oeival[1], oeival[0]
-    s = np.sqrt(c/a)
-    q = np.sqrt(b/a)
 
-    return evec, [a, b, c], [s, q]
+    assert eival[0] != 'nan', 'nan values'
+    assert eival[1] != 'nan', 'nan values'
+    assert eival[2] != 'nan', 'nan values'
+    assert eival[0] != 0, 'zeroth value in eigval'
+    assert eival[1] != 0, 'zeroth value in eigval'
+    assert eival[2] != 0, 'zeroth value in eigval'
 
-def iterate_shell(x, y, z, r, dr, tol):
+    eivec_s, eival_s, s, q =sort_eig(eival, evec)
+
+
+    return eivec_s, eival_s, s, q
+
+
+def iterate_shell(pos, r, dr, tol):
     """
     Computes the halo axis rates (q,s)
     Where q=c/a and s=b/a
@@ -99,17 +128,24 @@ def iterate_shell(x, y, z, r, dr, tol):
     """
     s_i = 1.0 #first guess of shape
     q_i = 1.0 #first guess of shape
-    x_s, y_s, z_s = shells(x, y, z, dr, r, q_i, s_i)
-    s_tensor = shape_tensor(x_s, y_s, z_s)
-    rot_i, s, q = axis_ratios(s_tensor)
+    pos_s = shells(pos, dr, r, q_i, s_i)
+    rot_i, axis, s, q = axis_ratios(pos_s)
+
+    counter = 0
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
-        x_s, y_s, z_s = shells(x, y, z, dr, r, q_i, s_i)
-        s_tensor = shape_tensor(x_s, y_s, z_s)
-        rot, s, q = axis_ratios(s_tensor)
-    return s, q
+        pos_s = shells(pos, dr, r, q_i, s_i)
+        assert len(pos_s) > 0, 'Error: No particles shell' 
+        rot, axis, s, q = axis_ratios(pos_s)
+        counter+=1
+        if counter == 2000:
+            s = 0
+            q = 0
+            break
 
-def iterate_volume(x, y, z, r, tol):
+    return rot, s.real, q.real
+
+def iterate_volume(pos, r, tol):
     """
     Computes the halo axis rates (q,s)
     Where q=c/a and s=b/a
@@ -117,7 +153,7 @@ def iterate_volume(x, y, z, r, tol):
 
     Parameters:
     -----------
-    x, y, z: arrays with the positions of the particles
+    pos: numpy ndarray with the positions of the particles
     r: distance at which you want the shape
     tol: convergence factor
 
@@ -128,19 +164,19 @@ def iterate_volume(x, y, z, r, tol):
     """
     s_i = 1.0 #first guess of shape
     q_i = 1.0
-    x_s, y_s, z_s = volumes(x, y, z, r, q_i, s_i)
-    s_tensor = shape_tensor(x_s, y_s, z_s)
-    rot_i, s, q = axis_ratios(s_tensor)
+    pos_s = volumes(pos, r, q_i, s_i)
+    rot, axis, s, q = axis_ratios(pos_s)
     counter = 0
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
-        x_s, y_s, z_s = volumes(x, y, z, r, q_i, s_i)
-        s_tensor = shape_tensor(x_s, y_s, z_s)
-        rot, s, q = axis_ratios(s_tensor)
+        pos_s = volumes(pos_s, r, q_i, s_i)
+        assert len(pos_s) > 0, 'Error: No particles in the volume' 
+        rot, axis, s, q = axis_ratios(pos_s)
         counter +=1
-        if counter >=2000:
+        if counter >= 2000:
            s, q = [0.0, 0.0]
            break
-    return s.real, q.real
+
+    return rot, s.real, q.real
 
 
