@@ -183,9 +183,9 @@ def iterate_volume(pos, r, tol):
         rot, axis, s, q = axis_ratios(pos_s)
         counter +=1
         if counter >= 2000:
-	   s, q = [0.0, 0.0]
-           print('to many iterations to find halo shape')
-           break
+            s, q = [0.0, 0.0]
+            print('to many iterations to find halo shape')
+            break
 
     return rot, s.real, q.real, len(pos_s)
 
