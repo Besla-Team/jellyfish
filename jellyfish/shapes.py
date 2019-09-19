@@ -23,7 +23,7 @@ def volumes(pos, r, q, s):
     return pos_vol
 
 #Computing the shape tensor
-def shape_tensor(pos):
+def shape_tensor(pos, weight=0):
     """
     Compute the shape tensor as defined in Chua+18
     https://ui.adsabs.harvard.edu/abs/2019MNRAS.484..476C/abstract
@@ -35,16 +35,28 @@ def shape_tensor(pos):
 
     """
     assert(np.shape(pos)[1]==3), "Wrong dimensions for pos"
-    shape_T = np.zeros([3, 3])
-    npart = len(pos)
-    shape_T = np.zeros([3, 3])
-    for i in range(3):
-        for j in range(3):
-            s = np.zeros(npart)
-            for n in range(npart):
-                s[n] = (pos[n,i] * pos[n,j])
-            shape_T[i][j] = sum(s)
+    if weight==0:
+        w=1
+    elif weight==1:
+        d = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2)
+        w = d**2
+
+    XX = np.sum(pos[:,0]*pos[:,0]/w)
+    XY = np.sum(pos[:,0]*pos[:,1]/w)
+    XZ = np.sum(pos[:,0]*pos[:,2]/w)
+    YX = np.sum(pos[:,1]*pos[:,0]/w)
+    YY = np.sum(pos[:,1]*pos[:,1]/w)
+    YX = np.sum(pos[:,1]*pos[:,2]/w)
+    ZX = np.sum(pos[:,2]*pos[:,0]/w)
+    ZY = np.sum(pos[:,2]*pos[:,1]/w)
+    ZZ = np.sum(pos[:,2]*pos[:,2]/w)
+
+    shape_T[i][j] = np.array([[XX, XY, XZ])],
+                              [YX, YY, YZ)],
+                              [ZX, ZY, ZZ]])
     return shape_T
+
+
 
 
 def sort_eig(eigval, eigvec):
@@ -129,7 +141,7 @@ def iterate_shell(pos, r, dr, tol):
     s_i = 1.0 #first guess of shape
     q_i = 1.0 #first guess of shape
     pos_s = shells(pos, dr, r, q_i, s_i)
-    rot_i, axis, s, q = axis_ratios(pos_s)
+    rot, axis, s, q = axis_ratios(pos_s)
 
     counter = 0
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
@@ -141,8 +153,9 @@ def iterate_shell(pos, r, dr, tol):
         if counter == 2000:
             s = 0
             q = 0
+            print('to many iterations to find halo shape')
             break
-
+    
     return rot, s.real, q.real
 
 def iterate_volume(pos, r, tol):
