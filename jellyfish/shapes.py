@@ -23,7 +23,7 @@ def volumes(pos, r, q, s):
     return pos_vol
 
 #Computing the shape tensor
-def shape_tensor(pos, weight=0):
+def shape_tensor(pos):
     """
     Compute the shape tensor as defined in Chua+18
     https://ui.adsabs.harvard.edu/abs/2019MNRAS.484..476C/abstract
@@ -34,26 +34,21 @@ def shape_tensor(pos, weight=0):
     S_{ij} = \sum_{k} k r_{k,i} r_{k,j}
 
     """
-    assert(np.shape(pos)[1]==3), "Wrong dimensions for pos"
-    if weight==0:
-        w=1
-    elif weight==1:
-        d = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2)
-        w = d**2
+    assert(np.shape(pos)[1]==3), "Wrong dimensions for pos, try pos.T"
 
-    XX = np.sum(pos[:,0]*pos[:,0]/w)
-    XY = np.sum(pos[:,0]*pos[:,1]/w)
-    XZ = np.sum(pos[:,0]*pos[:,2]/w)
-    YX = np.sum(pos[:,1]*pos[:,0]/w)
-    YY = np.sum(pos[:,1]*pos[:,1]/w)
-    YX = np.sum(pos[:,1]*pos[:,2]/w)
-    ZX = np.sum(pos[:,2]*pos[:,0]/w)
-    ZY = np.sum(pos[:,2]*pos[:,1]/w)
-    ZZ = np.sum(pos[:,2]*pos[:,2]/w)
+    XX = np.sum(pos[:,0]*pos[:,0])
+    XY = np.sum(pos[:,0]*pos[:,1])
+    XZ = np.sum(pos[:,0]*pos[:,2])
+    YX = np.sum(pos[:,1]*pos[:,0])
+    YY = np.sum(pos[:,1]*pos[:,1])
+    YZ = np.sum(pos[:,1]*pos[:,2])
+    ZX = np.sum(pos[:,2]*pos[:,0])
+    ZY = np.sum(pos[:,2]*pos[:,1])
+    ZZ = np.sum(pos[:,2]*pos[:,2])
 
-    shape_T[i][j] = np.array([[XX, XY, XZ])],
-                              [YX, YY, YZ)],
-                              [ZX, ZY, ZZ]])
+    shape_T = np.array([[XX, XY, XZ],
+                        [YX, YY, YZ],
+                        [ZX, ZY, ZZ]])
     return shape_T
 
 
@@ -80,7 +75,7 @@ def sort_eig(eigval, eigvec):
 
 #Computing the axis ratios from the
 #eigenvalues of the Shape Tensor
-def axis_ratios(pos):
+def axis_ratios(pos, weight, s, q):
     """
     Computes the axis ratio of the ellipsoid defined by the eigenvalues of
     the Shape tensor.
@@ -104,7 +99,7 @@ def axis_ratios(pos):
     q : double 
     """
 
-    ST = shape_tensor(pos)
+    ST = shape_tensor(pos, weight, s, q)
     eival, evec = linalg.eig(ST)
 
     assert eival[0] != 'nan', 'nan values'
@@ -114,7 +109,7 @@ def axis_ratios(pos):
     assert eival[1] != 0, 'zeroth value in eigval'
     assert eival[2] != 0, 'zeroth value in eigval'
 
-    eivec_s, eival_s, s, q =sort_eig(eival, evec)
+    eivec_s, eival_s, s, q = sort_eig(eival, evec)
 
 
     return eivec_s, eival_s, s, q
@@ -132,18 +127,19 @@ def iterate_shell(pos, r, dr, tol):
     r: distance at which you want the shape
     dr: Width of the shell
     tol: convergence factor
-
+    weight: weight factor in shape tensor. unity (0), r_ell**2 (1)
     Returns:
     s: c/a
     q: b/a
 
     """
+
     s_i = 1.0 #first guess of shape
     q_i = 1.0 #first guess of shape
     pos_s = shells(pos, dr, r, q_i, s_i)
     rot, axis, s, q = axis_ratios(pos_s)
-
     counter = 0
+
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
         pos_s = shells(pos, dr, r, q_i, s_i)
@@ -156,7 +152,7 @@ def iterate_shell(pos, r, dr, tol):
             print('to many iterations to find halo shape')
             break
     
-    return rot, s.real, q.real
+    return rot, s.real, q.real, len(pos_s)
 
 def iterate_volume(pos, r, tol):
     """
@@ -187,9 +183,10 @@ def iterate_volume(pos, r, tol):
         rot, axis, s, q = axis_ratios(pos_s)
         counter +=1
         if counter >= 2000:
-           s, q = [0.0, 0.0]
+	   s, q = [0.0, 0.0]
+           print('to many iterations to find halo shape')
            break
 
-    return rot, s.real, q.real
+    return rot, s.real, q.real, len(pos_s)
 
 
