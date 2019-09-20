@@ -1,13 +1,11 @@
+"""
+Routines to compute halo shapes.
+And plotting ellipsoids in 3d and 2d.
+
+"""
+
 import numpy as np
 from scipy import linalg
-
-"""
-To-Do:
-
-1. Rotation (Diagonaizing the shape tensor and rotationg the particles)
-2. Weight function
-
-"""
 
 def shells(pos, width, r, q, s):
     r_shell = np.sqrt(pos[:,0]**2.0 +pos[:,1]**2.0/q**2.0 +  pos[:,2]**2.0/s**2.0)
@@ -73,9 +71,7 @@ def sort_eig(eigval, eigvec):
     return eigvec_sort, [a, b, c], s, q
 
 
-#Computing the axis ratios from the
-#eigenvalues of the Shape Tensor
-def axis_ratios(pos, weight, s, q):
+def axis_ratios(pos):
     """
     Computes the axis ratio of the ellipsoid defined by the eigenvalues of
     the Shape tensor.
@@ -99,7 +95,7 @@ def axis_ratios(pos, weight, s, q):
     q : double 
     """
 
-    ST = shape_tensor(pos, weight, s, q)
+    ST = shape_tensor(pos)
     eival, evec = linalg.eig(ST)
 
     assert eival[0] != 'nan', 'nan values'
@@ -189,4 +185,58 @@ def iterate_volume(pos, r, tol):
 
     return rot, s.real, q.real, len(pos_s)
 
+def ellipse_3dcartesian(axis, rotmatrix, center=[0,0,0]):
+    """
+    Return the 3d cartessian coordinates of an ellipsoid.
 
+    Parameters:
+    
+    axis : 3d numpy.array
+        length of the axis. Note this has to be in the same order as the
+        rotation matrix.
+    rotmatrix : numpy.ndarray
+        Rotation matrix. i.e: eigen vectors of the shape tensor.
+    
+    center : 3d numpy.array
+        coordinates of the center of the ellipsoid default ([0,0,0])
+    
+    Returns:
+    --------
+
+    xyz : numpy.ndarray
+        coordinates of the ellipsoid in cartessian coordinates.
+    
+    """
+    
+    # Function taken from
+    # https://github.com/aleksandrbazhin/ellipsoid_fit_python/ellipsoid_fit.py
+                
+    u = np.linspace(0.0, 2.0 * np.pi, 100)
+    v = np.linspace(0.0, np.pi, 100)
+                    
+    # cartesian coordinates that correspond to the spherical
+    # angles:
+    x = axis[0] * np.outer(np.cos(u), np.sin(v))
+    y = axis[1] * np.outer(np.sin(u), np.sin(v))
+    z = axis[2] * np.outer(np.ones_like(u), np.cos(v))
+    # This is the magic!! 
+    # rotate accordingly
+    for i in range(len(x)):
+        for j in range(len(x)):
+            [x[i, j], y[i, j], z[i, j]] = np.dot([x[i, j], y[i, j], z[i, j]], rotmatrix)+ center
+
+    return np.array([x, y, z]).T
+
+def twod_surface(x, y):
+    """
+    2d surface from the border point of a set of points
+    """
+    assert(len(x)==len(y))
+    pos = np.array([x, y]).T
+    hull = scipy.spatial.ConvexHull(pos)
+    x_s = list(pos[hull.vertices, 0])
+    y_s = list(pos[hull.vertices, 1])
+    x_s.append(x_s[0])
+    y_s.append(y_s[0])
+                                            
+    return x_s, y_s
