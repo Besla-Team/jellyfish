@@ -5,17 +5,18 @@ And plotting ellipsoids in 3d and 2d.
 """
 
 import numpy as np
+from scipy.spatial import ConvexHull
 from scipy import linalg
 
 def shells(pos, width, r, q, s):
-    r_shell = np.sqrt(pos[:,0]**2.0 +pos[:,1]**2.0/q**2.0 +  pos[:,2]**2.0/s**2.0)
+    r_shell = np.sqrt(pos[:,0]**2.0 + pos[:,1]**2.0/q**2.0 + pos[:,2]**2.0/s**2.0)
     index_shell = np.where((r_shell<(r+width/2.)) & (r_shell>(r-width/2.)))
     pos_shell = pos[index_shell]
   
     return pos_shell
 
 def volumes(pos, r, q, s):
-    r_vol = np.sqrt(pos[:,0]**2.0 +pos[:,1]**2.0/q**2.0 +  pos[:,2]**2.0/s**2.0)
+    r_vol = np.sqrt(pos[:,0]**2.0 + pos[:,1]**2.0/q**2.0 + pos[:,2]**2.0/s**2.0)
     index_vol = np.where(r_vol<r)
     pos_vol = pos[index_vol]
     return pos_vol
@@ -68,7 +69,7 @@ def sort_eig(eigval, eigvec):
     s = np.sqrt(c/a)
     q = np.sqrt(b/a)
     eigvec_sort = np.array([eigvec[oeival[2]], eigvec[oeival[1]], eigvec[oeival[0]]])
-    return eigvec_sort, [a, b, c], s, q
+    return eigvec_sort, np.array([a, b, c]), s, q
 
 
 def axis_ratios(pos):
@@ -125,8 +126,16 @@ def iterate_shell(pos, r, dr, tol):
     tol: convergence factor
     weight: weight factor in shape tensor. unity (0), r_ell**2 (1)
     Returns:
+    -------
+    eigvec: eigen vectors
+
+    eigval: eigen values 
+    
     s: c/a
-    q: b/a
+    
+    q: b/a 
+    
+    Npart : Number of particles in the shell
 
     """
 
@@ -147,8 +156,8 @@ def iterate_shell(pos, r, dr, tol):
             q = 0
             print('to many iterations to find halo shape')
             break
-    
-    return rot, s.real, q.real, len(pos_s)
+    N_part = len(pos_s)
+    return rot, (3*axis/N_part)**0.5, s.real, q.real
 
 def iterate_volume(pos, r, tol):
     """
@@ -174,7 +183,7 @@ def iterate_volume(pos, r, tol):
     counter = 0
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
-        pos_s = volumes(pos_s, r, q_i, s_i)
+        pos_s = volumes(pos, r, q_i, s_i)
         assert len(pos_s) > 0, 'Error: No particles in the volume' 
         rot, axis, s, q = axis_ratios(pos_s)
         counter +=1
@@ -182,8 +191,8 @@ def iterate_volume(pos, r, tol):
             s, q = [0.0, 0.0]
             print('to many iterations to find halo shape')
             break
-
-    return rot, s.real, q.real, len(pos_s)
+    N_part = len(pos_s)
+    return rot, (5*axis/N_part)**0.5, s.real, q.real
 
 def ellipse_3dcartesian(axis, rotmatrix, center=[0,0,0]):
     """
@@ -223,7 +232,7 @@ def ellipse_3dcartesian(axis, rotmatrix, center=[0,0,0]):
     # rotate accordingly
     for i in range(len(x)):
         for j in range(len(x)):
-            [x[i, j], y[i, j], z[i, j]] = np.dot([x[i, j], y[i, j], z[i, j]], rotmatrix)+ center
+            [x[i, j], y[i, j], z[i, j]] = np.dot([x[i, j], y[i, j], z[i, j]], rotmatrix) + center
 
     return np.array([x, y, z]).T
 
@@ -233,7 +242,7 @@ def twod_surface(x, y):
     """
     assert(len(x)==len(y))
     pos = np.array([x, y]).T
-    hull = scipy.spatial.ConvexHull(pos)
+    hull = ConvexHull(pos)
     x_s = list(pos[hull.vertices, 0])
     y_s = list(pos[hull.vertices, 1])
     x_s.append(x_s[0])
