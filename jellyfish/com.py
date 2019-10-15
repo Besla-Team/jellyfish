@@ -197,7 +197,7 @@ def CM(xyz, vxyz, m, delta=0.025, Riter=0.975):
         # Reducing Sphere by its Riter
         index = np.where(R<Rmax*Riter)[0]
         xyz = xyz[index]
-        #vxyz = vxyz[index]
+        vxyz = vxyz[index]
         m = m[index]
         N = len(xyz)
         #Computing new CM coordinates and velocities
