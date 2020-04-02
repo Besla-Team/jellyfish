@@ -52,7 +52,6 @@ def shape_tensor(pos):
 
 
 
-
 def sort_eig(eigval, eigvec):
     """
     Sorts eigenvalues and eigenvectors in the following order:
@@ -61,15 +60,15 @@ def sort_eig(eigval, eigvec):
     c: Minor eigval
 
     The eigenvectors are sorted in the same way.
-
+    See Zemp+11 (https://arxiv.org/abs/1107.5582) for the definiton of the eigen values.
     """
 
     oeival = np.argsort(eigval)
     a, b, c = eigval[oeival[2]], eigval[oeival[1]], eigval[oeival[0]]
-    s = np.sqrt(c/a)
-    q = np.sqrt(b/a)
+    s = np.sqrt(c)/np.sqrt(a)
+    q = np.sqrt(b)/np.sqrt(a)
     eigvec_sort = np.array([eigvec[oeival[2]], eigvec[oeival[1]], eigvec[oeival[0]]])
-    return eigvec_sort, np.array([a, b, c]), s, q
+    return eigvec, np.array([a, b, c]), s, q
 
 
 def axis_ratios(pos):
@@ -112,7 +111,7 @@ def axis_ratios(pos):
     return eivec_s, eival_s, s, q
 
 
-def iterate_shell(pos, r, dr, tol):
+def iterate_shell(pos, r, dr, tol, return_pos=False):
     """
     Computes the halo axis rates (q,s)
     Where q=c/a and s=b/a
@@ -147,17 +146,23 @@ def iterate_shell(pos, r, dr, tol):
 
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
-        pos_s = shells(pos, dr, r, q_i, s_i)
-        assert len(pos_s) > 0, 'Error: No particles shell' 
+	# TODO: do I need to rolate to the principal axis frame? 
+        pos_s = shells(np.dot(rot, pos.T).T, dr, r, q_i, s_i)
+        assert len(pos_s) > 0, 'Error: No particles shell'
         rot, axis, s, q = axis_ratios(pos_s)
         counter+=1
-        if counter == 2000:
+        if counter == 10000:
             s = 0
             q = 0
             print('to many iterations to find halo shape')
             break
+
     N_part = len(pos_s)
-    return rot, (3*axis/N_part)**0.5, s.real, q.real
+    if return_pos==False:
+        return rot, np.sqrt(3*axis/len(pos_s)), s.real, q.real
+
+    elif return_pos==True:
+        return rot, np.sqrt(3*axis/len(pos_s)), s.real, q.real, pos_s
 
 def iterate_volume(pos, r, tol):
     """
@@ -183,7 +188,7 @@ def iterate_volume(pos, r, tol):
     counter = 0
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
-        pos_s = volumes(pos, r, q_i, s_i)
+        pos_s = volumes(np.dot(rot, pos.T).T, r, q_i, s_i)
         assert len(pos_s) > 0, 'Error: No particles in the volume' 
         rot, axis, s, q = axis_ratios(pos_s)
         counter +=1
