@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from pygadgetreader import *
 
 #Function that computes the center of mass for the halo and disk and
-# the corresponsing orbits for the host and satellite simultaneously
+#the corresponding orbits for the host and satellite simultaneously
 
 
 
@@ -153,7 +152,7 @@ def COM(xyz, vxyz, m):
     return [xCOM, yCOM, zCOM], [vxCOM, vyCOM, vzCOM]
 
 
-def CM(xyz, vxyz, m, delta=0.025):
+def CM(xyz, vxyz, m, delta=0.025, Riter=0.975):
     """
     Compute the center of mass coordinates and velocities of a halo
     using the Shrinking Sphere Method Power et al 2003.
@@ -165,6 +164,7 @@ def CM(xyz, vxyz, m, delta=0.025):
     xyz: cartesian coordinates with shape (n,3)
     vxys: cartesian velocities with shape (n,3)
     delta(optional): Precision of the CM, D=0.025
+    Riter (optional): Value used to shrink the sphere (0, 1)
 
     Returns:
     --------
@@ -194,16 +194,17 @@ def CM(xyz, vxyz, m, delta=0.025):
         # Re-centering sphere
         R = np.sqrt((xyz[:,0]-xCM_new)**2 + (xyz[:,1]-yCM_new)**2 + (xyz[:,2]-zCM_new)**2)
         Rmax = np.max(R)
-        # Reducing Sphere by its 2.5%
-        index = np.where(R<Rmax*0.975)[0]
+        # Reducing Sphere by its Riter
+        index = np.where(R<Rmax*Riter)[0]
         xyz = xyz[index]
         vxyz = vxyz[index]
         m = m[index]
         N = len(xyz)
         #Computing new CM coordinates and velocities
-        COM(xyz, vxyz, m)
+        rCOM, vCOM = COM(xyz, vxyz, m)
         xCM_new, yCM_new, zCM_new = rCOM
-        vxCM_new, vyCM_new, vzCM_new = vCOM
+        #VxCM_new, vyCM_new, vzCM_new = vCOM
 
+    print(Rmax)    
     vxCM_new, vyCM_new, vzCM_new = velocities_com([xCM_new, yCM_new, zCM_new], xyz, vxyz)
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
