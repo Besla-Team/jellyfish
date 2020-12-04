@@ -7,6 +7,7 @@ And plotting ellipsoids in 3d and 2d.
 import numpy as np
 from scipy.spatial import ConvexHull
 from scipy import linalg
+from scipy.spatial.transform import Rotation as R
 
 def shells(pos, width, r, q, s):
     r_shell = np.sqrt(pos[:,0]**2.0 + pos[:,1]**2.0/q**2.0 + pos[:,2]**2.0/s**2.0)
@@ -254,3 +255,23 @@ def twod_surface(x, y):
     y_s.append(y_s[0])
                                             
     return x_s, y_s
+    
+    
+    
+def rotate_zxy(vec, angles):
+    """
+    Rotate using euler angles in the following order: zxy
+    input:
+    ------
+    vec: 3d vec
+    angles : list of rotatation angles in the following zxy in degrees
+        e.g: [30, 0, 0]  would rotate 30 degrees around the z axis
+    output:
+    -------
+    rotated_vec : rotated vector 
+    """
+    
+    rot = R.from_euler('zxy', angles, degrees=True)
+    vec_rot = rot.apply(vec)
+    
+    return vec_rot
